@@ -1,0 +1,17 @@
+# Единый вид переносов строк: в репозитории всё хранится с LF.
+* text=auto eol=lf
+
+# Двоичные файлы трогать нельзя
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.pdf   binary
+*.gz    binary
+*.dz    binary
+
+# Скрипты PowerShell остаются с CRLF
+*.ps1 text eol=crlf

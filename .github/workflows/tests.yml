@@ -1,0 +1,30 @@
+# Проверки на каждый push и на каждый pull request.
+#
+# Ветка main — это то, что лежит на Pages, поэтому сломанный коммит сразу доезжает до телефона.
+# Приложение остаётся без сборки и без пакетов: проверкам хватает одного Node.
+
+name: Проверки
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    name: Варианты Lesen и список офлайн-кеша
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Проверить варианты Lesen B1
+        run: node tools/check-tests.mjs
+
+      # Забытый в списке файл ломает офлайн молча: в сети всё работает, а без сети приложение не открывается
+      - name: Сверить список офлайн-кеша с деревом проекта
+        run: node tools/check-precache.mjs
