@@ -1,0 +1,12 @@
+{
+  "name": "Bücherleser — читалка для немецкого",
+  "short_name": "Bücherleser",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4ecd8",
+  "theme_color": "#f4ecd8",
+  "lang": "ru",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

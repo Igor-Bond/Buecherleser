@@ -1,0 +1,420 @@
+# Базовый немецко-русский словарь Bücherleser.
+# Формат: слово|часть речи|грамматика|перевод|дополнительные формы
+# Существительные: род (m/f/n), множественное число. Глаголы: s = вспомогательный sein.
+der|art||определённый артикль мужского рода
+die|art||определённый артикль женского рода и множественного числа
+das|art||определённый артикль среднего рода; это
+den|art||артикль: Akkusativ мужского рода; Dativ множественного числа
+dem|art||артикль: Dativ мужского и среднего рода
+des|art||артикль: Genitiv мужского и среднего рода
+ein|art||неопределённый артикль; один
+eine|art||неопределённый артикль женского рода; одна
+kein|pron||никакой; не (отрицание существительного)
+ich|pron||я
+du|pron||ты
+er|pron||он
+sie|pron||она; они; Sie — Вы (вежливая форма)
+es|pron||оно; это
+wir|pron||мы
+ihr|pron||вы; её; их (притяжательное); ей
+mich|pron||меня
+dich|pron||тебя
+sich|pron||себя; -ся (возвратное местоимение)
+uns|pron||нас; нам
+euch|pron||вас; вам
+mir|pron||мне
+dir|pron||тебе
+ihm|pron||ему
+ihn|pron||его (Akkusativ)
+ihnen|pron||им; Ihnen — Вам
+mein|pron||мой
+dein|pron||твой
+sein|pron||его; свой
+unser|pron||наш
+euer|pron||ваш
+dies|pron||это
+dieser|pron||этот|diese,dieses,diesen,diesem
+jeder|pron||каждый|jede,jedes,jeden,jedem
+welcher|pron||какой; который|welche,welches,welchen,welchem
+alle|pron||все; всё|alles,allen,aller,allem
+man|pron||безличное местоимение: «говорят», «можно»
+wer|pron||кто
+was|pron||что
+niemand|pron||никто
+jemand|pron||кто-то
+etwas|pron||что-то; немного
+nichts|pron||ничего
+selbst|pron||сам; самостоятельно
+viel|adj||много; многий
+wenig|adj||мало; немногий
+ander|adj||другой
+beide|pron||оба|beiden,beider
+in|prp||в (+Dativ — где?; +Akkusativ — куда?)
+im|prp||в (= in dem)
+ins|prp||в (= in das)
+an|prp||у, на, к (+Dativ — где?; +Akkusativ — куда?)
+am|prp||у, на (= an dem); am Abend — вечером
+auf|prp||на (+Dativ — где?; +Akkusativ — куда?)
+aus|prp||из (+Dativ)
+bei|prp||у, при, возле (+Dativ)
+mit|prp||с, вместе с (+Dativ)
+nach|prp||после; в, по направлению к (+Dativ)
+von|prp||от; о; из (+Dativ)
+vom|prp||от (= von dem)
+zu|prp||к (+Dativ); слишком; частица перед инфинитивом
+zum|prp||к (= zu dem)
+zur|prp||к (= zu der)
+für|prp||для; за (+Akkusativ)
+durch|prp||через, сквозь (+Akkusativ)
+über|prp||над; о; через (+Dativ/+Akkusativ)
+unter|prp||под; среди (+Dativ/+Akkusativ)
+vor|prp||перед; тому назад (+Dativ/+Akkusativ)
+hinter|prp||за, позади (+Dativ/+Akkusativ)
+neben|prp||рядом с (+Dativ/+Akkusativ)
+zwischen|prp||между (+Dativ/+Akkusativ)
+ohne|prp||без (+Akkusativ)
+um|prp||вокруг; в (о времени) (+Akkusativ)
+gegen|prp||против; около (+Akkusativ)
+seit|prp||с (какого-то времени), уже (+Dativ)
+bis|prp||до
+während|prp||во время (+Genitiv); в то время как
+wegen|prp||из-за (+Genitiv)
+und|conj||и
+oder|conj||или
+aber|conj||но
+denn|conj||потому что; же (усилительная частица в вопросе)
+weil|conj||потому что
+dass|conj||что (союз)
+wenn|conj||если; когда
+als|conj||когда (однократно в прошлом); чем; как, в качестве
+ob|conj||ли
+sondern|conj||а, но (после отрицания)
+obwohl|conj||хотя
+damit|conj||чтобы; этим
+bevor|conj||прежде чем
+nachdem|conj||после того как
+also|adv||итак, значит
+nicht|adv||не
+auch|adv||тоже, также
+nur|adv||только
+noch|adv||ещё
+schon|adv||уже
+sehr|adv||очень
+hier|adv||здесь
+da|adv||там, тут; тогда; так как
+dort|adv||там
+jetzt|adv||сейчас, теперь
+dann|adv||потом, тогда
+heute|adv||сегодня
+gestern|adv||вчера
+morgen|adv||завтра
+immer|adv||всегда
+nie|adv||никогда
+oft|adv||часто
+wieder|adv||снова, опять
+gern|adv||охотно, с удовольствием
+vielleicht|adv||возможно, может быть
+so|adv||так
+wie|adv||как
+wo|adv||где
+wann|adv||когда
+warum|adv||почему
+ja|part||да; ведь
+nein|part||нет
+doch|part||всё же; да (в ответ на отрицание)
+mal|part||-ка (смягчение просьбы); раз
+sofort|adv||сразу, немедленно
+gerade|adv||как раз, именно сейчас; прямой
+leider|adv||к сожалению
+tatsächlich|adv||действительно, на самом деле
+einfach|adj||простой; просто
+lange|adv||долго
+draußen|adv||снаружи, на улице
+hinunter|adv||вниз (от говорящего)
+zusammen|adv||вместе
+zurück|adv||назад, обратно
+weg|adv||прочь
+fast|adv||почти
+genug|adv||достаточно
+bald|adv||скоро
+plötzlich|adv||вдруг, внезапно
+endlich|adv||наконец
+natürlich|adv||конечно, естественно
+ganz|adj||весь, целый; совсем
+nun|adv||теперь; ну
+eben|adv||только что; именно
+Mann|n|m,Männer|мужчина; муж
+Frau|n|f,Frauen|женщина; жена; госпожа
+Kind|n|n,Kinder|ребёнок
+Mensch|n|m,Menschen|человек
+Leute|n|,-|люди
+Freund|n|m,Freunde|друг
+Familie|n|f,Familien|семья
+Vater|n|m,Väter|отец
+Mutter|n|f,Mütter|мать
+Bruder|n|m,Brüder|брат
+Schwester|n|f,Schwestern|сестра
+Sohn|n|m,Söhne|сын
+Tochter|n|f,Töchter|дочь
+Nachbar|n|m,Nachbarn|сосед
+Herr|n|m,Herren|господин
+Haus|n|n,Häuser|дом
+Wohnung|n|f,Wohnungen|квартира
+Zimmer|n|n,-|комната
+Küche|n|f,Küchen|кухня
+Tür|n|f,Türen|дверь
+Fenster|n|n,-|окно
+Treppe|n|f,Treppen|лестница
+Stock|n|m,Stockwerke|этаж; палка
+Tisch|n|m,Tische|стол
+Stuhl|n|m,Stühle|стул
+Bett|n|n,Betten|кровать
+Licht|n|n,Lichter|свет
+Stadt|n|f,Städte|город
+Straße|n|f,Straßen|улица
+Land|n|n,Länder|страна; земля; сельская местность
+Dorf|n|n,Dörfer|деревня
+Weg|n|m,Wege|путь, дорога
+Platz|n|m,Plätze|место; площадь
+Tag|n|m,Tage|день
+Nacht|n|f,Nächte|ночь
+Morgen|n|m,-|утро
+Abend|n|m,Abende|вечер
+Woche|n|f,Wochen|неделя
+Monat|n|m,Monate|месяц
+Jahr|n|n,Jahre|год
+Zeit|n|f,Zeiten|время
+Stunde|n|f,Stunden|час
+Minute|n|f,Minuten|минута
+Uhr|n|f,Uhren|часы; час (при указании времени)
+Samstag|n|m,Samstage|суббота
+Sonntag|n|m,Sonntage|воскресенье
+Montag|n|m,Montage|понедельник
+Mitternacht|n|f,-|полночь
+Mitte|n|f,Mitten|середина
+Wasser|n|n,-|вода
+Kaffee|n|m,Kaffees|кофе
+Tee|n|m,Tees|чай
+Brot|n|n,Brote|хлеб
+Kuchen|n|m,-|пирог
+Essen|n|n,-|еда
+Buch|n|n,Bücher|книга
+Wort|n|n,Wörter|слово
+Sprache|n|f,Sprachen|язык; речь
+Frage|n|f,Fragen|вопрос
+Antwort|n|f,Antworten|ответ
+Name|n|m,Namen|имя
+Brief|n|m,Briefe|письмо
+Geschichte|n|f,Geschichten|история; рассказ
+Arbeit|n|f,Arbeiten|работа
+Schule|n|f,Schulen|школа
+Geld|n|n,Gelder|деньги
+Auto|n|n,Autos|автомобиль
+Zug|n|m,Züge|поезд
+Fahrrad|n|n,Fahrräder|велосипед
+Rad|n|n,Räder|колесо; велосипед
+Wagen|n|m,-|машина; вагон; повозка
+Last|n|f,Lasten|груз, ноша
+Kiste|n|f,Kisten|ящик
+Topf|n|m,Töpfe|кастрюля; горшок
+Pflanze|n|f,Pflanzen|растение
+Reise|n|f,Reisen|путешествие, поездка
+Hand|n|f,Hände|рука (кисть)
+Kopf|n|m,Köpfe|голова
+Auge|n|n,Augen|глаз
+Herz|n|n,Herzen|сердце
+Gesicht|n|n,Gesichter|лицо
+Stimme|n|f,Stimmen|голос
+Welt|n|f,Welten|мир, свет
+Leben|n|n,-|жизнь
+Liebe|n|f,-|любовь
+Glück|n|n,-|счастье; удача
+Dank|n|m,-|благодарность; vielen Dank — большое спасибо
+Problem|n|n,Probleme|проблема
+Sache|n|f,Sachen|вещь; дело
+Ding|n|n,Dinge|вещь, штука
+Teil|n|m,Teile|часть
+Ende|n|n,Enden|конец
+Anfang|n|m,Anfänge|начало
+Umzug|n|m,Umzüge|переезд
+Begegnung|n|f,Begegnungen|встреча
+Hund|n|m,Hunde|собака
+Katze|n|f,Katzen|кошка
+Baum|n|m,Bäume|дерево
+Sonne|n|f,Sonnen|солнце
+Himmel|n|m,-|небо
+Meer|n|n,Meere|море
+Wald|n|m,Wälder|лес
+sein|v|s|быть, являться
+haben|v||иметь
+werden|v|s|становиться; вспомогательный глагол будущего времени и пассива
+können|v||мочь, уметь
+müssen|v||быть должным, быть вынужденным
+wollen|v||хотеть
+sollen|v||быть должным (по чьей-то воле)
+dürfen|v||иметь разрешение, сметь
+mögen|v||любить, нравиться; ich möchte — я хотел бы
+gehen|v|s|идти, ходить
+kommen|v|s|приходить, приезжать
+fahren|v|s|ехать, ездить
+laufen|v|s|бежать; идти пешком
+stehen|v||стоять
+sitzen|v||сидеть
+liegen|v||лежать; находиться
+bleiben|v|s|оставаться
+sehen|v||видеть; смотреть
+hören|v||слышать; слушать
+sagen|v||сказать, говорить
+sprechen|v||говорить, разговаривать
+fragen|v||спрашивать; sich fragen — задаваться вопросом
+antworten|v||отвечать (auf + Akkusativ)
+wissen|v||знать (факт)
+kennen|v||знать, быть знакомым
+denken|v||думать (an + Akkusativ)
+glauben|v||верить; полагать
+finden|v||находить; считать
+geben|v||давать; es gibt — есть, имеется
+nehmen|v||брать
+bringen|v||приносить, привозить
+halten|v||держать; останавливаться
+machen|v||делать
+tun|v||делать
+arbeiten|v||работать
+wohnen|v||жить, проживать
+leben|v||жить
+essen|v||есть, кушать
+trinken|v||пить
+schlafen|v||спать
+lesen|v||читать
+schreiben|v||писать
+lernen|v||учить, учиться
+verstehen|v||понимать
+heißen|v||зваться; значить
+brauchen|v||нуждаться (+Akkusativ)
+suchen|v||искать
+warten|v||ждать (auf + Akkusativ)
+helfen|v||помогать (+Dativ)
+lachen|v||смеяться
+lieben|v||любить
+spielen|v||играть
+kaufen|v||покупать
+öffnen|v||открывать
+schließen|v||закрывать
+beginnen|v||начинать, начинаться
+fangen|v||ловить
+ziehen|v||тянуть; переезжать
+steigen|v|s|подниматься
+tragen|v||нести; носить
+schieben|v||толкать, двигать
+versuchen|v||пытаться; пробовать
+gelingen|v|s|удаваться (+Dativ)
+klingeln|v||звонить (в дверь); es klingelt — звонят
+backen|v||печь
+laden|v||грузить; заряжать
+bedanken|v||sich bedanken — благодарить (bei + Dativ, für + Akkusativ)
+unterhalten|v|unterhält,unterhielt,unterhalten|sich unterhalten — беседовать (über + Akkusativ); развлекать; содержать
+verabschieden|v||sich verabschieden — прощаться (von + Dativ)
+fallen|v|s|падать
+treffen|v||встречать; попадать
+vergessen|v||забывать
+zeigen|v||показывать
+erzählen|v||рассказывать
+fühlen|v||чувствовать
+rufen|v||звать; кричать
+stellen|v||ставить
+legen|v||класть
+setzen|v||сажать; sich setzen — садиться
+reisen|v|s|путешествовать
+bekommen|v||получать
+gefallen|v|gefällt,gefiel,gefallen|нравиться (+Dativ)
+gehören|v||принадлежать (+Dativ)
+passieren|v|s|происходить, случаться
+aufstehen|v|s|вставать
+aufmachen|v||открывать
+zumachen|v||закрывать
+ausmachen|v||выключать; договариваться
+anmachen|v||включать
+anhalten|v||останавливать, останавливаться
+aussteigen|v|s|выходить (из транспорта)
+einsteigen|v|s|садиться (в транспорт)
+anfangen|v||начинать, начинаться
+aufhören|v||прекращать, переставать
+einziehen|v|s|въезжать, вселяться
+ausziehen|v||съезжать; снимать (одежду)
+anziehen|v||надевать; sich anziehen — одеваться
+austrinken|v||выпивать до дна
+ankommen|v|s|прибывать, приезжать
+festhalten|v||крепко держать, удерживать
+zugeben|v||признавать; добавлять
+einladen|v||приглашать
+mitkommen|v|s|идти вместе с кем-то
+zurückkommen|v|s|возвращаться
+anrufen|v||звонить (по телефону)
+einkaufen|v||делать покупки
+aussehen|v||выглядеть
+fernsehen|v||смотреть телевизор
+mitnehmen|v||брать с собой
+zuhören|v||слушать (+Dativ)
+kennenlernen|v||знакомиться
+weggehen|v|s|уходить
+vorstellen|v||представлять; sich vorstellen — представляться
+aufpassen|v||быть внимательным; присматривать (auf + Akkusativ)
+gut|adj||хороший; хорошо|besser,beste,besten
+schlecht|adj||плохой; плохо
+groß|adj||большой; высокий
+klein|adj||маленький
+neu|adj||новый
+alt|adj||старый
+jung|adj||молодой
+schön|adj||красивый, прекрасный
+lang|adj||длинный; долгий; seit langem — давно
+kurz|adj||короткий
+hoch|adj||высокий|hohe,hohen,hoher,hohes,höher
+schwer|adj||тяжёлый; трудный
+leicht|adj||лёгкий
+schnell|adj||быстрый; быстро
+laut|adj||громкий; шумный
+leise|adj||тихий
+früh|adj||ранний; рано
+spät|adj||поздний; поздно
+warm|adj||тёплый
+kalt|adj||холодный
+richtig|adj||правильный
+falsch|adj||неправильный
+wichtig|adj||важный
+möglich|adj||возможный
+frei|adj||свободный
+glücklich|adj||счастливый
+müde|adj||усталый
+krank|adj||больной
+fertig|adj||готовый
+nah|adj||близкий|nahe,näher,nächste,nächsten
+weit|adj||далёкий; широкий
+voll|adj||полный
+leer|adj||пустой
+stark|adj||сильный
+schwach|adj||слабый
+teuer|adj||дорогой
+billig|adj||дешёвый
+gleich|adj||одинаковый; сейчас же
+eigen|adj||собственный
+deutsch|adj||немецкий
+erste|num||первый
+zweite|num||второй
+dritte|num||третий
+letzte|num||последний
+eins|num||один
+zwei|num||два
+drei|num||три
+vier|num||четыре
+fünf|num||пять
+sechs|num||шесть
+sieben|num||семь
+acht|num||восемь
+neun|num||девять
+zehn|num||десять
+hundert|num||сто
+tausend|num||тысяча
+danke|part||спасибо
+bitte|part||пожалуйста
+hallo|part||привет

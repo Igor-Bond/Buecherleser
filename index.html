@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4ecd8">
+<title>Bücherleser — читалка для немецкого</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- Библиотека -->
+<main id="v-library" class="view">
+  <header class="top">
+    <h1>Bücherleser</h1>
+    <nav>
+      <button data-go="vocab">Мои слова</button>
+      <button data-go="dicts">Словари</button>
+      <button data-go="settings">Настройки</button>
+    </nav>
+  </header>
+  <div class="page">
+    <div id="books" class="books"></div>
+    <p class="hint">Книги fb2, fb2.zip и txt. Можно перетащить файл прямо в окно.</p>
+  </div>
+  <button id="add-book" class="fab">+ Добавить книгу</button>
+  <input id="book-file" type="file" accept=".fb2,.zip,.txt" multiple hidden>
+</main>
+
+<!-- Чтение -->
+<main id="v-reader" class="view" hidden>
+  <header id="r-top" class="chrome">
+    <button id="r-back" aria-label="В библиотеку">‹</button>
+    <div id="r-title"></div>
+    <button id="r-toc" aria-label="Оглавление">☰</button>
+    <button id="r-look" aria-label="Оформление">Аа</button>
+  </header>
+  <div id="r-view"><div id="r-content" lang="de"></div></div>
+  <div id="r-status"><span id="r-chapter"></span><span id="r-pos"></span></div>
+  <footer id="r-bottom" class="chrome">
+    <button id="r-prev" aria-label="Назад">‹</button>
+    <input id="r-slider" type="range" min="0" max="1000" value="0" aria-label="Положение в книге">
+    <button id="r-next" aria-label="Вперёд">›</button>
+  </footer>
+  <button id="phrase-btn" hidden>Разобрать фразу</button>
+</main>
+
+<!-- Мои слова -->
+<main id="v-vocab" class="view" hidden>
+  <header class="top"><button data-go="library">‹</button><h1>Мои слова</h1></header>
+  <div class="page">
+    <div class="tools">
+      <input id="vocab-q" type="search" placeholder="Поиск">
+      <button id="vx-anki">Экспорт в Anki</button>
+      <button id="vx-csv">CSV</button>
+      <button id="vx-json">JSON</button>
+      <button id="vx-import">Импорт</button>
+      <input id="vocab-file" type="file" accept=".json" hidden>
+    </div>
+    <div id="vocab-list"></div>
+  </div>
+</main>
+
+<!-- Словари -->
+<main id="v-dicts" class="view" hidden>
+  <header class="top"><button data-go="library">‹</button><h1>Словари</h1></header>
+  <div class="page">
+    <div id="dict-list"></div>
+    <button id="dict-add" class="primary">+ Подключить словарь</button>
+    <input id="dict-file" type="file" multiple hidden>
+    <p class="hint">Поддерживаются три формата. <b>StarDict</b> — выберите сразу три файла (.ifo, .idx и .dict или .dict.dz) либо один zip-архив с ними. <b>TSV</b> — строки «слово, табуляция, перевод». <b>JSON</b> — словари, выгруженные из Bücherleser.</p>
+  </div>
+</main>
+
+<!-- Настройки -->
+<main id="v-settings" class="view" hidden>
+  <header class="top"><button data-go="library">‹</button><h1>Настройки</h1></header>
+  <div class="page form">
+    <h2>Ответ на нажатие слова</h2>
+    <label class="radio"><input type="radio" name="answer" value="dict"><span><b>Словарь</b> — мгновенно и без интернета. ИИ-разбор открывается отдельной вкладкой.</span></label>
+    <label class="radio"><input type="radio" name="answer" value="ai"><span><b>ИИ-разбор</b> — сразу развёрнутое объяснение в контексте. Нужен интернет и ключ.</span></label>
+
+    <h2>ИИ-разбор</h2>
+    <label>Ключ Claude API
+      <input id="set-key" type="password" autocomplete="off" placeholder="sk-ant-…">
+    </label>
+    <p class="hint">Ключ создаётся на platform.claude.com и хранится только на этом устройстве. Запросы идут напрямую в Anthropic и оплачиваются с вашего аккаунта.</p>
+    <label>Модель <select id="set-model"></select></label>
+    <label>Ваш уровень немецкого
+      <select id="set-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select>
+    </label>
+  </div>
+</main>
+
+<!-- Карточка слова -->
+<aside id="sheet" hidden>
+  <div class="sh-head">
+    <div class="seg" id="sh-tabs"><button data-tab="dict">Словарь</button><button data-tab="ai">ИИ-разбор</button></div>
+    <button id="sh-save" aria-label="Сохранить в мои слова">☆</button>
+    <button id="sh-close" aria-label="Закрыть">×</button>
+  </div>
+  <div id="sh-body"></div>
+</aside>
+
+<!-- Оформление -->
+<aside id="look" class="panel" hidden>
+  <div class="themes" id="lk-themes"></div>
+  <div class="row"><span>Свой цвет</span><span><label class="clr">фон <input type="color" id="lk-bg"></label> <label class="clr">текст <input type="color" id="lk-fg"></label></span></div>
+  <div class="row"><span>Шрифт</span><span><select id="lk-font"></select> <button id="lk-font-add" title="Загрузить файл шрифта">+</button><input id="font-file" type="file" accept=".ttf,.otf,.woff,.woff2" hidden></span></div>
+  <div class="row"><span>Размер</span><span class="step" data-k="size" data-step="1" data-min="12" data-max="40"></span></div>
+  <div class="row"><span>Межстрочный интервал</span><span class="step" data-k="lh" data-step="0.05" data-min="1.1" data-max="2.4"></span></div>
+  <div class="row"><span>Отступ между абзацами</span><span class="step" data-k="para" data-step="0.1" data-min="0" data-max="1.5"></span></div>
+  <div class="row"><span>Поля</span><span class="step" data-k="margin" data-step="4" data-min="8" data-max="96"></span></div>
+  <div class="row"><span>Ширина колонки</span><span class="step" data-k="maxw" data-step="40" data-min="400" data-max="1400"></span></div>
+  <div class="row"><span>Выравнивание</span><span class="seg" data-k="align"><button data-v="justify">По ширине</button><button data-v="left">По левому</button></span></div>
+  <div class="row"><span>Листание</span><span class="seg" data-k="mode"><button data-v="paged">Страницы</button><button data-v="scroll">Прокрутка</button></span></div>
+  <div class="row"><span>Переносы слов</span><span class="seg" data-k="hyph"><button data-v="true">Да</button><button data-v="false">Нет</button></span></div>
+  <div class="row"><span>Красная строка</span><span class="seg" data-k="indent"><button data-v="true">Да</button><button data-v="false">Нет</button></span></div>
+</aside>
+
+<aside id="toc" class="panel" hidden></aside>
+<div id="scrim" hidden></div>
+<div id="toast" hidden></div>
+<div id="drop" hidden>Отпустите файл, чтобы добавить книгу</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
