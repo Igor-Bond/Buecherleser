@@ -5,6 +5,7 @@ import { parseBookFile, parseFb2Text } from './fb2.js';
 import { explain, MODELS } from './llm.js';
 import { DEMO_FB2 } from './demo.js';
 import * as L from './lesen.js';
+import * as Y from './sync.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -43,7 +44,7 @@ const DEF = {
   answer: 'dict', key: '', model: MODELS[0][0], level: 'A2',
 };
 let S = DEF, userFonts = [];
-const saveSettings = debounce(() => DB.put('kv', S, 'settings'), 250);
+const saveSettings = debounce(() => { S.at = Date.now(); DB.put('kv', S, 'settings'); Y.touch(); }, 250);
 
 function lum(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -150,7 +151,7 @@ async function addBooks(files) {
 async function storeBook(b) {
   const id = 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   await DB.put('content', { id, chapters: b.chapters, toc: b.toc, notes: b.notes });
-  await DB.put('books', { id, title: b.title, author: b.author, cover: b.cover, added: Date.now(), progress: 0 });
+  await DB.put('books', await Y.adopt({ id, title: b.title, author: b.author, cover: b.cover, added: Date.now(), progress: 0 }));
   return id;
 }
 function initLibrary() {
@@ -293,7 +294,7 @@ const savePos = (() => {
     if (!R) return;
     R.meta.pos = { ch: R.ci, b: currentBlock() };
     R.meta.progress = progress(); R.meta.opened = Date.now();
-    DB.put('books', R.meta);
+    DB.put('books', R.meta); Y.touch();
   };
   const f = () => { clearTimeout(t); t = setTimeout(run, 600); };
   f.flush = () => { if (t) run(); };
@@ -304,18 +305,19 @@ const savePos = (() => {
 
 let tTimer = null;
 function makeTest(states) {
+  const persist = debounce(() => { DB.put('kv', states, 'lesen'); Y.touch(); }, 300);
   return {
     states,
     st: vid => states[vid] ??= { ans: {}, used: 0 },
     timerVid: () => tTimer?.vid,
-    save: debounce(() => DB.put('kv', states, 'lesen'), 300),
+    save: vid => { states[vid].at = Date.now(); persist(); },
   };
 }
 function stopTimer() { if (tTimer) clearInterval(tTimer.tick); tTimer = null; }
 function countHint() {
   if (!R?.test) return;
   const st = R.test.st(R.ch[R.ci].vid);
-  if (!st.done) { st.used = (st.used || 0) + 1; R.test.save(); }
+  if (!st.done) { st.used = (st.used || 0) + 1; R.test.save(R.ch[R.ci].vid); }
 }
 const chapterOf = (vid, kind) => R.ch.findIndex(c => c.vid === vid && c.kind === kind);
 
@@ -324,7 +326,7 @@ function finishVariant(vid, auto) {
   if (!auto && missing && !confirm(`Без ответа осталось заданий: ${missing}. Завершить и проверить?`)) return;
   st.done = true; st.score = L.score(L.variant(vid), st).ok; st.date = Date.now();
   if (tTimer?.vid === vid) st.sec = Math.min(L.MINUTES * 60, Math.round((Date.now() - tTimer.t0) / 1000));
-  stopTimer(); T.save();
+  stopTimer(); T.save(vid);
   if (auto) toast('Время вышло — вариант проверен', 5000);
   if (current === 'reader') showChapter(chapterOf(vid, 'result'));
 }
@@ -337,7 +339,7 @@ function testClick(e) {
     const q = opt.closest('.q'), n = +q.dataset.n, k = +opt.dataset.k;
     if (st.ans[n] === k) delete st.ans[n]; else st.ans[n] = k;
     for (const x of q.querySelectorAll('.opt')) x.classList.toggle('on', +x.dataset.k === st.ans[n]);
-    T.save();
+    T.save(ch.vid);
     return true;
   }
   const act = e.target.closest('[data-t]')?.dataset.t;
@@ -359,7 +361,7 @@ function testClick(e) {
   else if (act === 'reset') {
     if (!confirm('Стереть ответы этого варианта и начать заново?')) return true;
     if (tTimer?.vid === ch.vid) stopTimer();
-    T.states[ch.vid] = { ans: {}, used: 0 }; T.save();
+    T.states[ch.vid] = { ans: {}, used: 0 }; T.save(ch.vid);
     showChapter(first);
   }
   return true;
@@ -626,7 +628,7 @@ async function renderAiTab() {
 
 async function toggleSave() {
   const c = cur; if (!c) return;
-  if (c.saved) await DB.del('vocab', c.vid);
+  if (c.saved) { await DB.del('vocab', c.vid); await Y.forget(c.vid); }
   else {
     const it = c.kind === 'word' ? first(c) : null;
     await DB.put('vocab', {
@@ -634,7 +636,7 @@ async function toggleSave() {
       t: c.kind === 'word' ? wordTr(c) : '', ctx: c.sentence, book: R?.meta.title || '', ai: c.ai || '', added: Date.now(),
     });
   }
-  c.saved = !c.saved;
+  c.saved = !c.saved; Y.touch();
   $('#sh-save').textContent = c.saved ? '★' : '☆';
   $('#sh-save').classList.toggle('on', c.saved);
   toast(c.saved ? 'Сохранено в «Мои слова»' : 'Убрано из «Моих слов»', 1400);
@@ -667,7 +669,8 @@ function initVocab() {
   $('#vocab-q').addEventListener('input', debounce(renderVocab, 150));
   $('#vocab-list').addEventListener('click', async e => {
     const b = e.target.closest('[data-act=del]'); if (!b) return;
-    await DB.del('vocab', b.closest('.item').dataset.id); renderVocab();
+    const id = b.closest('.item').dataset.id;
+    await DB.del('vocab', id); await Y.forget(id); Y.touch(); renderVocab();
   });
   const csv = s => `"${String(s || '').replace(/"/g, '""')}"`;
   const flat = s => String(s || '').replace(/[\t\n\r]+/g, ' ');
@@ -691,7 +694,7 @@ function initVocab() {
       const j = JSON.parse(await f.text()), words = Array.isArray(j) ? j : j.words;
       let n = 0;
       for (const v of words) if (v?.id && v.lemma) { await DB.put('vocab', v); n++; }
-      toast(`Импортировано слов: ${n}`); renderVocab();
+      toast(`Импортировано слов: ${n}`); Y.touch(); renderVocab();
     } catch { toast('Не удалось прочитать файл'); }
   };
 }
@@ -739,9 +742,83 @@ function renderSettings() {
   $('#set-key').value = S.key;
   $('#set-model').innerHTML = MODELS.map(([id, n]) => `<option value="${id}" ${id === S.model ? 'selected' : ''}>${n}</option>`).join('');
   $('#set-level').value = S.level;
+  renderCloud(); renderInstall(); Y.warmUp();
+}
+
+// Синхронизация и копия файлом
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'только что' : m < 60 ? m + ' мин назад' : new Date(t).toLocaleString('ru'); };
+function renderCloud() {
+  const u = Y.cloud.user, el = $('#cloud-status');
+  el.textContent = !Y.cloud.configured ? 'Облако не настроено.'
+    : !u ? 'Вход не выполнен: прогресс хранится только на этом устройстве.'
+    : Y.cloud.error ? `${u.email}. ${Y.cloud.error}`
+    : `${u.email}. ${Y.cloud.last ? 'Синхронизировано ' + ago(Y.cloud.last) : 'Синхронизация…'}`;
+  $('#cloud-in').hidden = !!u || !Y.cloud.configured;
+  $('#cloud-sync').hidden = $('#cloud-out').hidden = !u;
+}
+function initCloud() {
+  Y.setHooks({
+    settings: s => { S = { ...DEF, ...s, look: { ...DEF.look, ...s.look } }; applyLook(); if (current === 'settings') renderSettings(); },
+    lesen: states => { if (R?.test) { const t = R.test.states; for (const k of Object.keys(t)) delete t[k]; Object.assign(t, states); } },
+    changed: () => { if (current === 'library') renderLibrary(); else if (current === 'vocab') renderVocab(); },
+    status: renderCloud,
+  });
+  $('#cloud-in').onclick = async () => {
+    try { await Y.signIn(); if (Y.cloud.user) toast(Y.cloud.error || 'Вход выполнен, прогресс синхронизирован'); }
+    catch (err) { toast(err.message, 7000); }
+  };
+  $('#cloud-sync').onclick = async () => { toast('Синхронизация…', 20000); toast(await Y.sync() ? 'Синхронизировано' : Y.cloud.error, 4000); };
+  $('#cloud-out').onclick = async () => { await Y.signOut(); toast('Вы вышли. Данные на устройстве остались'); };
+  $('#bk-save').onclick = async () => download(`buecherleser-${new Date().toISOString().slice(0, 10)}.json`, await Y.backupText(), 'application/json');
+  $('#bk-load').onclick = () => $('#bk-file').click();
+  $('#bk-file').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try { const r = await Y.restore(await f.text()); toast(`Восстановлено: книг с закладкой — ${r.books}, слов — ${r.words}`, 5000); }
+    catch (err) { toast(err instanceof SyntaxError ? 'Не удалось прочитать файл' : err.message, 5000); }
+  };
+}
+
+// Установка на главный экран и полный экран
+let installEvt = null;
+const standalone = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
+function renderInstall() {
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  $('#inst-status').textContent = standalone() ? 'Приложение установлено и открыто в своём окне, без адресной строки.'
+    : installEvt ? 'Установленное приложение открывается с главного экрана на весь экран и работает без сети.'
+    : ios ? 'На iPhone: кнопка «Поделиться» → «На экран „Домой“». После этого читалка открывается на весь экран.'
+    : 'Чтобы открывать на весь экран с главного экрана: меню браузера → «Установить приложение» или «Добавить на главный экран».';
+  $('#inst-btn').hidden = !installEvt || standalone();
+  $('#fs-btn').hidden = standalone() || !document.documentElement.requestFullscreen;
+  $('#fs-btn').textContent = document.fullscreenElement ? 'Выйти из полного экрана' : 'На весь экран';
+}
+function initInstall() {
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; renderInstall(); });
+  addEventListener('appinstalled', () => { installEvt = null; renderInstall(); toast('Приложение установлено'); });
+  document.addEventListener('fullscreenchange', renderInstall);
+  $('#inst-btn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; renderInstall(); };
+  $('#fs-btn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => toast('Браузер не разрешил полный экран'));
+}
+
+// Встроенные книги для чтения: ставятся один раз; удалённая книга сама не возвращается
+const BUILTIN = ['strom-verstehen', 'der-neue-kollege', 'hausnummer-12', 'kleine-geschichten'];
+async function installBuiltin() {
+  const have = (await DB.get('kv', 'builtin')) || [];
+  let added = 0;
+  for (const name of BUILTIN) {
+    if (have.includes(name)) continue;
+    try {
+      const r = await fetch(`books/${name}.fb2`);
+      if (!r.ok) continue;
+      await storeBook(parseFb2Text(await r.text(), name));
+      have.push(name); added++;
+    } catch { /* нет сети — попробуем при следующем запуске */ }
+  }
+  if (added) { await DB.put('kv', have, 'builtin'); if (current === 'library') renderLibrary(); }
 }
 function initSettings() {
-  $('#v-settings').addEventListener('change', () => {
+  $('#v-settings').addEventListener('change', e => {
+    if (e.target.type === 'file') return;
     S.answer = $('input[name=answer]:checked')?.value || 'dict';
     S.key = $('#set-key').value.trim(); S.model = $('#set-model').value; S.level = $('#set-level').value;
     saveSettings();
@@ -756,7 +833,7 @@ async function start() {
   userFonts = (await DB.get('kv', 'fonts')) || [];
   for (const f of userFonts) addFont(f).catch(() => {});
   applyLook(false);
-  initLook(); initLibrary(); initReader(); initSheet(); initVocab(); initDicts(); initSettings();
+  initLook(); initLibrary(); initReader(); initSheet(); initVocab(); initDicts(); initSettings(); initCloud(); initInstall();
   history.replaceState({ v: 'library' }, '');
 
   if (!(await DB.get('kv', 'demo'))) {
@@ -766,6 +843,8 @@ async function start() {
   const lesen = await DB.get('books', L.BOOK_ID);
   await DB.put('books', { ...L.bookMeta(), ...(lesen && { added: lesen.added, opened: lesen.opened, pos: lesen.pos, progress: lesen.progress }) });
   await renderLibrary();
+  installBuiltin();
+  Y.resume();
   const installed = await D.ensureBase(p => toast(`Устанавливаю словарь… ${Math.round(p * 100)}%`, 120000));
   if (installed) toast('Словарь установлен', 2000);
   dictNames = Object.fromEntries((await D.listDicts()).map(d => [d.id, d.name]));

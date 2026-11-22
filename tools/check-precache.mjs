@@ -11,7 +11,7 @@ const shell = new Set([...list.matchAll(/'([^']+)'/g)].map(m => m[1]));
 
 const walk = dir => readdirSync(join(root, dir), { withFileTypes: true }).flatMap(e =>
   e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]);
-const need = ['index.html', 'manifest.webmanifest', 'icon.svg', 'data/base-de-ru.txt', ...walk('css'), ...walk('js')];
+const need = ['index.html', 'manifest.webmanifest', 'icon.svg', 'data/base-de-ru.txt', ...walk('css'), ...walk('js'), ...walk('books')];
 
 const missing = need.filter(f => !shell.has(f));
 const dead = [...shell].filter(f => f !== './' && !existsSync(join(root, f)));

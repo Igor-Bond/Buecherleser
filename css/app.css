@@ -211,3 +211,4 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 #r-content .score { text-indent: 0; text-align: center; font-size: 2.4em; font-weight: 700; margin: .2em 0 .4em; }
 #r-content .score small { display: block; font: 500 .4em var(--ui); color: var(--muted); }
 #r-content .tx:has(.board) { border-left: 0; padding-left: 0; }
+.btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }

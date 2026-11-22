@@ -7,6 +7,10 @@
 <title>Bücherleser — читалка для немецкого</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -91,6 +95,30 @@
     <label>Ваш уровень немецкого
       <select id="set-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option></select>
     </label>
+
+    <h2>Синхронизация между устройствами</h2>
+    <p id="cloud-status" class="hint"></p>
+    <p class="btns">
+      <button id="cloud-in" class="primary">Войти через Google</button>
+      <button id="cloud-sync" hidden>Синхронизировать сейчас</button>
+      <button id="cloud-out" hidden>Выйти</button>
+    </p>
+    <p class="hint">Переносятся место чтения, ответы Lesen, «Мои слова» и оформление. Сами книги и словари добавляются на каждом устройстве отдельно — место чтения найдёт книгу по названию.</p>
+
+    <h2>Копия в файл</h2>
+    <p class="btns">
+      <button id="bk-save">Сохранить копию</button>
+      <button id="bk-load">Восстановить из файла</button>
+      <input id="bk-file" type="file" accept=".json,application/json" hidden>
+    </p>
+    <p class="hint">В файле то же, что уходит в синхронизацию. При восстановлении данные объединяются с тем, что уже есть: побеждает более свежая запись.</p>
+
+    <h2>Приложение и полный экран</h2>
+    <p id="inst-status" class="hint"></p>
+    <p class="btns">
+      <button id="inst-btn" class="primary" hidden>Установить приложение</button>
+      <button id="fs-btn" hidden>На весь экран</button>
+    </p>
   </div>
 </main>
 
