@@ -1,4 +1,4 @@
-// Разбор книг: fb2, fb2.zip, txt → главы в виде HTML.
+// Разбор книг: fb2, fb2.zip, txt → главы в виде HTML. EPUB разбирает epub.js.
 
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const textLen = html => html.replace(/<[^>]+>/g, '').length;
@@ -38,10 +38,15 @@ function decode(buf) {
 export async function parseBookFile(file) {
   let buf = await file.arrayBuffer();
   let name = file.name;
+  const epub = async b => (await import('./epub.js')).parseEpub(b, name.replace(/\.(epub|zip)$/gi, ''));
+  if (/\.epub$/i.test(name)) return epub(buf);
   if (/\.zip$/i.test(name)) {
     const z = await unzip(buf);
+    if (z.files.some(x => x.name === 'META-INF/container.xml')) return epub(buf); // EPUB, переименованный в zip
+    const inner = z.files.find(x => /\.epub$/i.test(x.name));
+    if (inner) return epub(await z.read(inner));
     const f = z.files.find(x => /\.fb2$/i.test(x.name)) || z.files.find(x => /\.txt$/i.test(x.name));
-    if (!f) throw new Error('В архиве нет файла fb2');
+    if (!f) throw new Error('В архиве нет книги fb2 или epub');
     buf = await z.read(f); name = f.name;
   }
   const fallback = name.replace(/\.(fb2|txt|zip)$/gi, '');
