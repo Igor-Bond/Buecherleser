@@ -182,6 +182,8 @@ const view = $('#r-view'), content = $('#r-content');
 let R = null; // состояние открытой книги
 const paged = () => S.look.mode === 'paged';
 
+let bareT = 0;
+$('#v-reader').addEventListener('pointerdown', () => clearTimeout(bareT), true);
 async function openBook(id) {
   const meta = await DB.get('books', id);
   stopTimer();
@@ -194,6 +196,9 @@ async function openBook(id) {
   $('#r-title').textContent = meta.title;
   show('reader');
   $('#v-reader').classList.remove('bare');
+  // панели с названием и прогрессом показываются на пару секунд и плавно уезжают; любое касание отменяет автоскрытие
+  clearTimeout(bareT);
+  bareT = setTimeout(() => { if (current === 'reader' && $('#look').hidden && $('#toc').hidden) $('#v-reader').classList.add('bare'); }, 1600);
   showChapter(clamp(meta.pos?.ch || 0, 0, R.ch.length - 1), { block: meta.pos?.b || 0 });
 }
 
