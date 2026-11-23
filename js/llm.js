@@ -7,11 +7,14 @@ const CLAUDE = [
   ['claude-sonnet-5-5', 'Claude Sonnet 5.5 — быстрее и дешевле'],
   ['claude-haiku-5-5', 'Claude Haiku 5.5 — самый быстрый и дешёвый'],
 ];
-// Имена с «latest» Google сам переводит на текущую версию модели — список не устаревает
+// Модели с бесплатным лимитом (список сверен с aistudio.google.com/docs/models 23.11.2026).
+// Если выбранная перегружена, исчерпала лимит или снята, запрос сам уходит к следующей по списку.
 const GEMINI = [
-  ['gemini-flash-latest', 'Gemini Flash — быстрый, хватает бесплатного лимита'],
-  ['gemini-flash-lite-latest', 'Gemini Flash-Lite — самый быстрый'],
-  ['gemini-pro-latest', 'Gemini Pro — самый точный разбор'],
+  ['auto', 'Автоматически — лучшая из доступных ключу'],
+  ['gemini-3.8-flash', 'Gemini 3.8 Flash — быстрый и точный'],
+  ['gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite — самый быстрый'],
+  ['gemini-3.6-flash', 'Gemini 3.6 Flash — запасной'],
+  ['gemini-4-hydrogen', 'Gemini 4 Hydrogen — новое поколение'],
 ];
 export const MODELS = CLAUDE;
 const isGoogle = key => !/^sk-ant-/.test(key || '');
@@ -42,29 +45,72 @@ function prompt({ kind, text, sentence }) {
 - что из этого стоит запомнить.`;
 }
 
+// Как в wordschatz: спрашиваем у Google, какие модели доступны именно этому ключу, и ставим вперёд свежие flash-модели.
+// Список живёт до перезагрузки страницы; занятые модели запоминаем на пару минут, чтобы не стучаться в них снова.
+const G = { key: '', ranked: null, good: '', busy: new Map() };
+const SKIP = /embedding|aqa|vision|image|imagen|tts|audio|veo|live|omni|genie|robotics|computer|gemma|learnlm/i;
+function rank(name) {
+  if (!/^gemini/i.test(name) || SKIP.test(name)) return -1;
+  let s = 50;
+  if (/flash/i.test(name)) s += 100;
+  if (/lite/i.test(name)) s -= 30;
+  if (/pro/i.test(name)) s -= 20;            // обычно без бесплатного лимита
+  if (/preview|exp/i.test(name)) s -= 40;    // нестабильны и чаще перегружены
+  if (/latest/i.test(name)) s -= 10;
+  const v = name.match(/gemini-(\d+(?:\.\d+)?)/);
+  if (v) s += parseFloat(v[1]) * 10;
+  return s;
+}
+async function ranked(key, signal) {
+  if (G.key !== key) Object.assign(G, { key, ranked: null, good: '', busy: new Map() });
+  if (G.ranked) return G.ranked;
+  try {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { signal, headers: { 'x-goog-api-key': key } });
+    const names = ((await r.json()).models || [])
+      .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+      .map(m => m.name.replace(/^models\//, ''));
+    const list = names.map(n => [n, rank(n)]).filter(m => m[1] > 0).sort((a, b) => b[1] - a[1]).map(m => m[0]);
+    if (list.length) G.ranked = list;
+  } catch (err) { if (signal?.aborted) throw err; }
+  return G.ranked || GEMINI.map(m => m[0]).filter(m => m !== 'auto');
+}
+
 // Gemini: потоковый ответ через REST, без SDK
 async function gemini({ key, model, level, kind, text, sentence, onText, signal }) {
-  let r;
-  try {
-    r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
-      method: 'POST', signal,
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system(level) }] },
-        contents: [{ role: 'user', parts: [{ text: prompt({ kind, text, sentence }) }] }],
-      }),
-    });
-  } catch (err) {
-    if (signal?.aborted) throw err;
-    throw new Error('Не удалось связаться с Google. Проверьте интернет.');
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system(level) }] },
+    contents: [{ role: 'user', parts: [{ text: prompt({ kind, text, sentence }) }] }],
+  });
+  // Сначала выбранная модель, затем остальные: перегрузка (503), лимит (429) и снятая модель (404) — повод попробовать следующую
+  const all = await ranked(key, signal);
+  const now = Date.now();
+  let queue = [...new Set([model, G.good, ...all])].filter(m => m && m !== 'auto');
+  const free = queue.filter(m => !(G.busy.get(m) > now));
+  queue = (free.length ? free : queue).slice(0, 6);
+  let r, last = 0, msg = '';
+  for (const m of queue) {
+    try {
+      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`, {
+        method: 'POST', signal, body,
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      });
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      throw new Error('Не удалось связаться с Google. Проверьте интернет.');
+    }
+    if (r.ok) { G.good = m; break; }
+    last = r.status;
+    msg = (await r.json().catch(() => null))?.error?.message || '';
+    if (![404, 429, 500, 503].includes(last)) break;
+    G.busy.set(m, Date.now() + 120000);
+    if (G.good === m) G.good = '';
   }
   if (!r.ok) {
-    const msg = (await r.json().catch(() => null))?.error?.message || '';
-    if (r.status === 400 && /API key/i.test(msg) || r.status === 401 || r.status === 403) throw new Error('Ключ Google не принят. Проверьте его в настройках.');
-    if (r.status === 429) throw new Error('Исчерпан лимит запросов Gemini. Попробуйте позже или выберите другую модель.');
-    if (r.status === 404) throw new Error('Эта модель Gemini недоступна для вашего ключа. Выберите другую в настройках.');
-    if (r.status === 503) throw new Error('Модель Gemini сейчас перегружена. Попробуйте ещё раз или выберите другую.');
-    throw new Error(`Ошибка Gemini (${r.status}): ${msg}`);
+    if (last === 400 && /API key/i.test(msg) || last === 401 || last === 403) throw new Error('Ключ Google не принят. Проверьте его в настройках.');
+    if (last === 429) throw new Error('Исчерпан лимит запросов Gemini на всех моделях. Попробуйте позже.');
+    if (last === 404) throw new Error('Модели Gemini недоступны для вашего ключа.');
+    if (last === 503 || last === 500) throw new Error('Все модели Gemini сейчас перегружены. Попробуйте через минуту.');
+    throw new Error(`Ошибка Gemini (${last}): ${msg}`);
   }
   const reader = r.body.pipeThrough(new TextDecoderStream()).getReader();
   let buf = '', out = '', blocked = '';
