@@ -40,7 +40,7 @@ export default {
     }], { compact: true }),
     part(3, [
       {
-        html: `<h4>Der Wochenmarkt zieht um</h4><p>Liebe Kundinnen und Kunden, ab dem 6. Oktober wird der Rathausplatz neu gebaut. Der Wochenmarkt findet deshalb bis zum Frühjahr auf dem Parkplatz an der Stadthalle statt. Die Markttage bleiben gleich: Mittwoch und Samstag von 7 bis 13 Uhr. Alle Händler kommen mit.</p><p>An Markttagen können Sie auf dem Parkplatz an der Stadthalle nicht parken. Benutzen Sie bitte das Parkhaus in der Schillerstraße: Die erste Stunde ist dort für Marktbesucher kostenlos.</p>`,
+        html: `<h4>Der Wochenmarkt zieht um</h4><p>Liebe Kundinnen und Kunden, ab dem 6. Oktober wird der Rathausplatz umgebaut. Der Wochenmarkt findet deshalb bis zum Frühjahr auf dem Parkplatz an der Stadthalle statt. Die Markttage bleiben gleich: Mittwoch und Samstag von 7 bis 13 Uhr. Alle Händler kommen mit.</p><p>An Markttagen können Sie auf dem Parkplatz an der Stadthalle nicht parken. Benutzen Sie bitte das Parkhaus in der Schillerstraße: Die erste Stunde ist dort für Marktbesucher kostenlos.</p>`,
         items: [
           { n: 11, q: 'Der Markt findet in Zukunft an anderen Wochentagen statt.', opts: RF, a: 1 },
           { n: 12, q: 'Wer mit dem Auto zum Markt kommt, …', opts: ['parkt im Parkhaus eine Stunde gratis.', 'kann direkt an der Stadthalle parken.', 'soll auf dem Rathausplatz parken.'], a: 0 },

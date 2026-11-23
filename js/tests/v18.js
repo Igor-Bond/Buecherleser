@@ -83,7 +83,7 @@ export default {
       items: [
         { n: 20, q: '', opts: ['fallen', 'gefallen', 'fiel'], a: 1 },
         { n: 21, q: '', opts: ['lassen', 'gelassen', 'lässt'], a: 0 },
-        { n: 22, q: '', opts: ['als', 'so', 'wie'], a: 2 },
+        { n: 22, q: '', opts: ['dass', 'so', 'wie'], a: 2 },
         { n: 23, q: '', opts: ['wie viel', 'wie lange', 'wie oft'], a: 1 },
         { n: 24, q: '', opts: ['ich möchte', 'möchte ich', 'ich möchten'], a: 1 },
         { n: 25, q: '', opts: ['mich', 'mir', 'sich'], a: 0 },

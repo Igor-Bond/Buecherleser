@@ -31,7 +31,7 @@ export default {
         ad('d', 'Lagerhelfer (m/w/d) in Vollzeit', 'Nordkamp Logistik, 3-Schicht-System (Früh/Spät/Nacht), Staplerschein nicht erforderlich, Schichtzulage. Ab 1.10. Tel. 0151 555 02 43'),
         ad('e', 'Mitarbeiter/in Lager, Vollzeit', 'Getränkehandel Prüß, nur Tagschicht Mo–Fr 7–15.30 Uhr, Einarbeitung vor Ort, Staplerschein nicht nötig. 15 €/Std. Tel. 0151 555 02 54'),
         ad('f', 'Küchenhilfe für Schulmensa', 'Teilzeit, 20 Std./Woche, Mo–Fr 8.30–12.30 Uhr, in den Schulferien frei. Keine Ausbildung nötig. Tel. 0151 555 02 65'),
-        ad('g', 'Lkw-Fahrer/in im Nahverkehr', 'Vollzeit, Führerschein Kl. C/CE zwingend erforderlich, Tagestouren, kein Wochenende. Spedition Okun, Tel. 0151 555 02 76'),
+        ad('g', 'Lkw-Fahrer/in im Nahverkehr', 'Vollzeit, Führerschein Kl. C/CE zwingend erforderlich (Pkw-Führerschein Kl. B reicht nicht), Tagestouren, kein Wochenende. Spedition Okun, Tel. 0151 555 02 76'),
         ad('h', 'Modehaus Seibrecht: Verkäufer/in', 'Teilzeit, 18 Std./Woche, Do und Fr 14–19 Uhr, Sa 10–18 Uhr. Freundliches Auftreten, gutes Deutsch. Tel. 0151 555 02 87'),
       ].join(''),
       items: [

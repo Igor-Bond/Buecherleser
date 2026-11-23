@@ -48,7 +48,7 @@ export default {
       {
         html: `<h4>Praxis Dr. Krause – Rezepte bestellen</h4><p>Liebe Patientinnen und Patienten,</p><p>wenn Sie regelmäßig dasselbe Medikament nehmen, müssen Sie für ein neues Rezept nicht mehr in die Sprechstunde kommen. Bestellen Sie es einfach am Telefon oder auf unserer Internetseite. Wir brauchen dafür den Namen des Medikaments und Ihr Geburtsdatum.</p><p>Das Rezept ist am nächsten Werktag fertig. Sie müssen es nicht bei uns abholen: Zeigen Sie in der Apotheke einfach Ihre Versichertenkarte, dann bekommen Sie Ihr Medikament. Wichtig: Alle drei Monate müssen Sie mit Ihrer Karte einmal persönlich in die Praxis kommen.</p><p>Ihr Praxisteam</p>`,
         items: [
-          { n: 13, q: 'Wer ein Medikament schon lange nimmt, kann das neue Rezept telefonisch bestellen.', opts: RF, a: 0 },
+          { n: 13, q: 'Wer ein Medikament regelmäßig nimmt, kann das neue Rezept telefonisch bestellen.', opts: RF, a: 0 },
           { n: 14, q: 'In der Apotheke …', opts: ['muss man sein Geburtsdatum aufschreiben.', 'kann man ein neues Rezept bestellen.', 'braucht man die Versichertenkarte.'], a: 2 },
         ],
       },

@@ -86,7 +86,7 @@ export default {
 <p>Mit freundlichen Grüßen<br>Ivana Kolar</p>`,
       items: [
         { n: 20, q: '', opts: ['aussteigen', 'ausgestiegen', 'ausstieg'], a: 1 },
-        { n: 21, q: '', opts: ['über', 'auf', 'zwischen'], a: 0 },
+        { n: 21, q: '', opts: ['über', 'aus', 'zwischen'], a: 0 },
         { n: 22, q: '', opts: ['befindet', 'befunden', 'befinden'], a: 2 },
         { n: 23, q: '', opts: ['konnten', 'konnte', 'könnt'], a: 1 },
         { n: 24, q: '', opts: ['aufgegeben', 'ausgegeben', 'abgegeben'], a: 2 },

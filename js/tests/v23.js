@@ -49,7 +49,7 @@ export default {
         html: `<h4>Straßenfest in der Birkenstraße</h4><p>Liebe Nachbarinnen und Nachbarn,</p><p>am Samstag, den 28. Juni, feiern wir ab 15 Uhr unser Straßenfest. Die Birkenstraße ist an diesem Tag von 12 bis 22 Uhr für Autos gesperrt. Bitte parkt eure Autos deshalb schon am Freitagabend in einer anderen Straße.</p><p>Tische und Bänke leiht uns der Sportverein. Die Getränke kaufen wir gemeinsam, dafür sammeln wir 5 Euro pro Erwachsenen. Für das Buffet bringt bitte jede Familie einen Salat oder einen Kuchen mit. Die Liste dafür hängt im Hausflur von Nummer 14. Wir suchen auch noch Leute, die am Vormittag beim Aufbauen helfen.</p><p>Familie Brandt und Herr Özdemir</p>`,
         items: [
           { n: 13, q: 'Am Tag des Festes dürfen in der Birkenstraße einige Stunden lang keine Autos fahren.', opts: RF, a: 0 },
-          { n: 14, q: 'Die Nachbarn sollen …', opts: ['Tische und Bänke auf die Straße stellen.', 'ihre eigenen Getränke mitbringen.', 'etwas zu essen für alle mitbringen.'], a: 2 },
+          { n: 14, q: 'Die Nachbarn sollen …', opts: ['Tische und Bänke mitbringen.', 'ihre eigenen Getränke mitbringen.', 'etwas zu essen für alle mitbringen.'], a: 2 },
         ],
       },
       {
@@ -63,7 +63,7 @@ export default {
     part(4, [{
       html: `<h4>Nach dem Umzug – woran Sie denken müssen</h4>
 <p>Wenn Sie in eine neue Wohnung ziehen, müssen Sie sich in den ersten zwei Wochen nach dem Umzug beim Bürgeramt anmelden. Dafür brauchen Sie Ihren Ausweis und eine Bestätigung von Ihrem Vermieter. Die Anmeldung kostet nichts. Einen Termin müssen Sie vorher im Internet oder am Telefon buchen.</p>
-<p>Denken Sie auch an Ihre Post. Bei der Post können Sie einen Nachsendeauftrag bestellen. Dann schickt die Post Ihre Briefe sechs oder zwölf Monate lang automatisch an die neue Adresse. Dieser Service ist nicht kostenlos. Teilen Sie die neue Adresse außerdem Ihrer Bank, Ihrer Krankenkasse und Ihrem Arbeitgeber mit.</p>
+<p>Denken Sie auch an Ihre Post. Bei der Post können Sie einen Nachsendeauftrag stellen. Dann schickt die Post Ihre Briefe sechs oder zwölf Monate lang automatisch an die neue Adresse. Dieser Service ist nicht kostenlos. Teilen Sie die neue Adresse außerdem Ihrer Bank, Ihrer Krankenkasse und Ihrem Arbeitgeber mit.</p>
 <p>Für den Umzugswagen können Sie vor dem Haus einen Parkplatz reservieren lassen. Den Antrag stellen Sie beim Ordnungsamt, und zwar spätestens zehn Tage vor dem Umzug. Das kostet 35 Euro.</p>
 <p>Lesen Sie am letzten Tag in der alten Wohnung den Stromzähler ab und melden Sie die Zahl Ihrer Stromfirma. So bezahlen Sie nicht für den Strom, den der nächste Mieter verbraucht.</p>`,
       items: [

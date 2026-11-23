@@ -85,7 +85,7 @@ export default {
         { n: 21, q: '', opts: ['damit', 'deshalb', 'auch wenn'], a: 2 },
         { n: 22, q: '', opts: ['die', 'der', 'denen'], a: 0 },
         { n: 23, q: '', opts: ['dem', 'den', 'der'], a: 1 },
-        { n: 24, q: '', opts: ['seit', 'bis', 'ab'], a: 2 },
+        { n: 24, q: '', opts: ['seit', 'von', 'ab'], a: 2 },
         { n: 25, q: '', opts: ['ist', 'hat', 'werden'], a: 0 },
       ],
     }], { gaps: true }),

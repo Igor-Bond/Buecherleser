@@ -75,7 +75,7 @@ export default {
     part(5, [{
       html: `<p>Sehr geehrte Damen und Herren,</p>
 <p>am 12. Oktober habe ich in Ihrem Online-Shop eine schwarze Winterjacke in Größe M bestellt (Bestellnummer 48213). Heute habe ich das Paket bekommen. Leider haben Sie mir ${gap(20)} falsche Jacke geschickt: Sie ist blau und ${gap(21)} zu groß, nämlich Größe XL.</p>
-<p>Ich schicke Ihnen die Jacke morgen zurück. Bitte teilen Sie mir mit, ${gap(22)} ich das Porto selbst bezahlen muss.</p>
+<p>Ich schicke Ihnen die Jacke morgen zurück. Bitte teilen Sie mir mit, ${gap(22)} ich das Porto selbst bezahlen muss oder nicht.</p>
 <p>Ich brauche die Jacke dringend, ${gap(23)} es schon sehr kalt ist. Schicken Sie mir deshalb bitte so schnell wie möglich die richtige Jacke. ${gap(24)} die schwarze Jacke nicht mehr lieferbar ist, überweisen Sie mir bitte das Geld zurück.</p>
 <p>Ich warte ${gap(25)} Ihre Antwort.</p>
 <p>Mit freundlichen Grüßen<br>Tomasz Wieczorek</p>`,

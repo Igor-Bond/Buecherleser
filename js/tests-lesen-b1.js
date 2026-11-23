@@ -47,7 +47,7 @@ export const LESEN_B1 = {
             ad('d', 'Sprachschule Lingua', 'Deutschkurse am Abend, zweimal pro Woche von 18.30 bis 20 Uhr. Niveau A1 bis B2. Beginn jeden Monat.'),
             ad('e', 'Tagesmutter hat Plätze frei', 'Erfahrene Tagesmutter betreut Kinder von 1 bis 3 Jahren. Montag bis Freitag, 7 bis 16 Uhr.'),
             ad('f', 'Zu verschenken', 'Kinderfahrrad (20 Zoll), gut erhalten. Sie müssen es selbst abholen.'),
-            ad('g', 'Restaurant Olivia sucht Aushilfe', 'Für die Küche, freitags und samstags am Abend. Eine Ausbildung ist nicht nötig.'),
+            ad('g', 'Restaurant Olivia sucht Aushilfe', 'Für die Küche, samstags und sonntags am Abend. Eine Ausbildung ist nicht nötig.'),
             ad('h', 'Deutsch am Vormittag', 'Intensivkurs von Montag bis Freitag, 8.30–12.30 Uhr. Kinderbetreuung im Haus.'),
           ].join(''),
           items: [
@@ -156,7 +156,7 @@ export const LESEN_B1 = {
             ],
           },
           {
-            html: `<p>Liebe Fahrgäste,</p><p>wegen Bauarbeiten fährt die Straßenbahnlinie 4 vom 2. bis zum 20. Juli nicht zwischen Hauptbahnhof und Stadtpark. Auf dieser Strecke fahren Ersatzbusse. Die Busse halten an allen Haltestellen der Linie 4, die Fahrt dauert aber etwa zehn Minuten länger.</p><p>Ihre Fahrkarten sind auch in den Ersatzbussen gültig. Aktuelle Informationen finden Sie in unserer App.</p><p>Ihre Verkehrsbetriebe</p>`,
+            html: `<p>Liebe Fahrgäste,</p><p>wegen Bauarbeiten fährt die Straßenbahnlinie 4 vom 2. bis zum 20. Juli nicht zwischen Hauptbahnhof und Stadtpark. Auf dem Rest der Strecke fährt die Bahn wie immer. Zwischen Hauptbahnhof und Stadtpark fahren Ersatzbusse. Die Busse halten dort an allen Haltestellen der Linie 4, die Fahrt dauert aber etwa zehn Minuten länger.</p><p>Ihre Fahrkarten sind auch in den Ersatzbussen gültig. Aktuelle Informationen finden Sie in unserer App.</p><p>Ihre Verkehrsbetriebe</p>`,
             items: [
               { n: 13, q: 'Die Linie 4 fährt im Juli drei Wochen lang auf der ganzen Strecke nicht.', opts: RF, a: 1 },
               { n: 14, q: 'Für die Ersatzbusse …', opts: ['braucht man eine extra Fahrkarte.', 'braucht man keine neue Fahrkarte.', 'muss man in der App bezahlen.'], a: 1 },

@@ -86,7 +86,7 @@ export default {
         { n: 22, q: '', opts: ['ob', 'wenn', 'dass'], a: 2 },
         { n: 23, q: '', opts: ['sobald', 'während', 'obwohl'], a: 0 },
         { n: 24, q: '', opts: ['nachgeschrieben', 'nachschreiben', 'nachzuschreiben'], a: 1 },
-        { n: 25, q: '', opts: ['verliert', 'vergisst', 'verpasst'], a: 2 },
+        { n: 25, q: '', opts: ['verliert', 'versucht', 'verpasst'], a: 2 },
       ],
     }], { gaps: true }),
   ],

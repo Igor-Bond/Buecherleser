@@ -88,7 +88,7 @@ export default {
         { n: 21, q: '', opts: ['Ihnen', 'Sie', 'Ihr'], a: 1 },
         { n: 22, q: '', opts: ['für', 'von', 'über'], a: 2 },
         { n: 23, q: '', opts: ['Damit', 'Falls', 'Ob'], a: 1 },
-        { n: 24, q: '', opts: ['darf', 'muss', 'wollte'], a: 0 },
+        { n: 24, q: '', opts: ['darf', 'hat', 'wollte'], a: 0 },
         { n: 25, q: '', opts: ['Verbindung', 'Vorstellung', 'Verfügung'], a: 2 },
       ],
     }], { gaps: true }),
