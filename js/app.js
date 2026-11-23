@@ -282,7 +282,8 @@ function progress() {
 function update() {
   const p = progress();
   $('#r-chapter').textContent = R.ch[R.ci].title || '';
-  $('#r-pos').textContent = (tTimer ? '⏱ ' + L.clock(Math.max(0, tTimer.left)) + ' · ' : '') + (paged() ? `${R.page + 1} / ${R.pages} · ` : '') + Math.round(p * 100) + '%';
+  $('#r-timer').textContent = tTimer ? L.clock(Math.max(0, tTimer.left)) : '';
+  $('#r-pos').textContent = (paged() ? `${R.page + 1} / ${R.pages} · ` : '') + Math.round(p * 100) + '%';
   $('#r-slider').value = Math.round(p * 1000);
   savePos();
 }
@@ -310,10 +311,18 @@ function makeTest(states) {
     states,
     st: vid => states[vid] ??= { ans: {}, used: 0 },
     timerVid: () => tTimer?.vid,
-    save: vid => { states[vid].at = Date.now(); persist(); },
+    save: vid => { if (tTimer?.vid === vid) states[vid].sec = spent(); states[vid].at = Date.now(); persist(); },
   };
 }
-function stopTimer() { if (tTimer) clearInterval(tTimer.tick); tTimer = null; }
+// Потраченное время копится в состоянии варианта (sec): пауза, перезапуск таймера и закрытие приложения его не обнуляют.
+const spent = () => Math.min(L.MINUTES * 60, tTimer.base + Math.round((Date.now() - tTimer.t0) / 1000));
+function stopTimer() {
+  if (!tTimer) return;
+  const t = tTimer;
+  clearInterval(t.tick); t.T.st(t.vid).sec = spent(); tTimer = null; t.T.save(t.vid);
+  $('#r-timer').textContent = '';
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && tTimer) tTimer.T.save(tTimer.vid); });
 function countHint() {
   if (!R?.test) return;
   const st = R.test.st(R.ch[R.ci].vid);
@@ -325,8 +334,8 @@ function finishVariant(vid, auto) {
   const T = R.test, st = T.st(vid), missing = L.TOTAL - Object.keys(st.ans).length;
   if (!auto && missing && !confirm(`Без ответа осталось заданий: ${missing}. Завершить и проверить?`)) return;
   st.done = true; st.score = L.score(L.variant(vid), st).ok; st.date = Date.now();
-  if (tTimer?.vid === vid) st.sec = Math.min(L.MINUTES * 60, Math.round((Date.now() - tTimer.t0) / 1000));
-  stopTimer(); T.save(vid);
+  if (tTimer?.vid === vid) stopTimer();
+  T.save(vid);
   if (auto) toast('Время вышло — вариант проверен', 5000);
   if (current === 'reader') showChapter(chapterOf(vid, 'result'));
 }
@@ -347,10 +356,11 @@ function testClick(e) {
   const first = chapterOf(ch.vid, 'start');
   if (act === 'timer') {
     stopTimer();
-    tTimer = { vid: ch.vid, left: L.MINUTES * 60, t0: Date.now() };
+    tTimer = { vid: ch.vid, T, base: st.sec || 0, t0: Date.now() };
+    tTimer.left = L.MINUTES * 60 - tTimer.base;
     tTimer.tick = setInterval(() => {
       if (!tTimer || !R?.test) return stopTimer();
-      tTimer.left = L.MINUTES * 60 - Math.round((Date.now() - tTimer.t0) / 1000);
+      tTimer.left = L.MINUTES * 60 - spent();
       if (tTimer.left <= 0) finishVariant(tTimer.vid, true);
       else if (current === 'reader') update();
     }, 1000);

@@ -47,7 +47,8 @@ function startHtml(v, st, ctx) {
   if (st.done) h += `<p><b>Результат: ${st.score} из ${TOTAL}.</b> Верные и неверные ответы отмечены на страницах заданий, итог — в конце варианта.</p>`;
   else if (n) h += `<p>Отвечено: ${n} из ${TOTAL}. Ответы сохраняются — можно продолжить в любой момент.</p>`;
   h += `<p>В варианте 5 частей и ${TOTAL} заданий; на экзамене на них даётся ${MINUTES} минут. Нажмите на любое слово в тексте — появится подсказка из словаря. Подсказки считаются и показываются в итоге.</p><p>`;
-  if (!st.done) h += running ? '<button data-t="timer-off">Остановить таймер</button>' : `<button class="primary" data-t="timer">Запустить таймер на ${MINUTES} минут</button>`;
+  if (!st.done) h += running ? '<button data-t="timer-off">Поставить таймер на паузу</button>'
+    : `<button class="primary" data-t="timer">${st.sec ? `Продолжить таймер — осталось ${clock(MINUTES * 60 - st.sec)}` : `Запустить таймер на ${MINUTES} минут`}</button>`;
   if (n || st.done) h += '<button data-t="reset">Начать вариант заново</button>';
   return h + '</p><p class="muted">Листайте дальше — к первой части.</p></div>';
 }
