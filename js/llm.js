@@ -64,15 +64,40 @@ function rank(name) {
 async function ranked(key, signal) {
   if (G.key !== key) Object.assign(G, { key, ranked: null, good: '', busy: new Map() });
   if (G.ranked) return G.ranked;
-  try {
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { signal, headers: { 'x-goog-api-key': key } });
-    const names = ((await r.json()).models || [])
-      .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
-      .map(m => m.name.replace(/^models\//, ''));
-    const list = names.map(n => [n, rank(n)]).filter(m => m[1] > 0).sort((a, b) => b[1] - a[1]).map(m => m[0]);
-    if (list.length) G.ranked = list;
-  } catch (err) { if (signal?.aborted) throw err; }
+  try { await fetchList(key, signal); } catch (err) { if (signal?.aborted) throw err; }
   return G.ranked || GEMINI.map(m => m[0]).filter(m => m !== 'auto');
+}
+async function fetchList(key, signal) {
+  let r;
+  try {
+    r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { signal, headers: { 'x-goog-api-key': key } });
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    throw new Error('Не удалось связаться с Google. Проверьте интернет.');
+  }
+  const data = await r.json().catch(() => null);
+  if (!r.ok || !data) throw new Error([400, 401, 403].includes(r.status) ? 'Ключ Google не принят. Проверьте его.' : `Google не отдал список моделей (${r.status}).`);
+  const list = (data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+    .map(m => { const id = m.name.replace(/^models\//, ''); return [id, m.displayName || '', rank(id)]; })
+    .filter(m => m[2] > 0).sort((a, b) => b[2] - a[2]);
+  if (!list.length) throw new Error('Для этого ключа нет подходящих моделей Gemini.');
+  G.ranked = list.map(m => m[0]);
+  setList(list.slice(0, 12).map(m => [m[0], m[1] && m[1] !== m[0] ? `${m[1]} (${m[0]})` : m[0]]));
+  return list.length;
+}
+// Список в настройках: тот же массив (его сравнивают по ссылке), содержимое меняется на месте и помнится на устройстве
+function setList(items, save = true) {
+  GEMINI.splice(1, GEMINI.length, ...items);
+  if (save) try { localStorage.setItem('bl-gemini-models', JSON.stringify(items)); } catch {}
+}
+try { const saved = JSON.parse(localStorage.getItem('bl-gemini-models')); if (Array.isArray(saved) && saved.length) setList(saved, false); } catch {}
+/** Кнопка «Обновить список моделей»: заново спрашивает у Google, что доступно ключу. Возвращает число моделей. */
+export async function refreshModels(key) {
+  if (!key || !isGoogle(key)) throw new Error('Сначала вставьте ключ Google Gemini.');
+  if (G.key !== key) Object.assign(G, { key, ranked: null, good: '', busy: new Map() });
+  G.busy.clear();
+  return fetchList(key);
 }
 
 // Gemini: потоковый ответ через REST, без SDK

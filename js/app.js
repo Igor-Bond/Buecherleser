@@ -2,7 +2,7 @@ import * as DB from './db.js';
 import * as D from './dict.js';
 import * as G from './german.js';
 import { parseBookFile, parseFb2Text } from './fb2.js';
-import { explain, MODELS, modelsFor } from './llm.js';
+import { explain, MODELS, modelsFor, refreshModels } from './llm.js';
 import { DEMO_FB2 } from './demo.js';
 import * as L from './lesen.js';
 import * as Y from './sync.js';
@@ -817,6 +817,17 @@ async function installBuiltin() {
   if (added) { await DB.put('kv', have, 'builtin'); if (current === 'library') renderLibrary(); }
 }
 function initSettings() {
+  $('#set-models').addEventListener('click', async e => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const n = await refreshModels($('#set-key').value.trim());
+      if (!modelsFor(S.key).some(m => m[0] === S.model)) { S.model = 'auto'; saveSettings(); }
+      renderSettings();
+      toast(`Список обновлён: моделей — ${n}`);
+    } catch (err) { toast(err.message); }
+    btn.disabled = false;
+  });
   $('#v-settings').addEventListener('change', e => {
     if (e.target.type === 'file') return;
     S.answer = $('input[name=answer]:checked')?.value || 'dict';
