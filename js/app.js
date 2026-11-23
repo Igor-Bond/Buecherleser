@@ -2,7 +2,7 @@ import * as DB from './db.js';
 import * as D from './dict.js';
 import * as G from './german.js';
 import { parseBookFile, parseFb2Text } from './fb2.js';
-import { explain, MODELS } from './llm.js';
+import { explain, MODELS, modelsFor } from './llm.js';
 import { DEMO_FB2 } from './demo.js';
 import * as L from './lesen.js';
 import * as Y from './sync.js';
@@ -604,7 +604,7 @@ async function renderAiTab() {
   const head = c.kind === 'phrase' ? `<div class="phrase-q" lang="de">${esc(c.text)}</div>` : '';
   if (c.ai) return body.innerHTML = head + `<div class="ai">${md(c.ai)}</div>`;
   if (!S.key) {
-    body.innerHTML = head + `<p>Для ИИ-разбора нужен ключ Claude API. Он хранится только на этом устройстве.</p><button class="primary" data-go="settings">Открыть настройки</button>`;
+    body.innerHTML = head + `<p>Для ИИ-разбора нужен ключ Google Gemini (бесплатный) или Claude. Он хранится только на этом устройстве.</p><button class="primary" data-go="settings">Открыть настройки</button>`;
     return;
   }
   if (c.loading) return;
@@ -740,7 +740,7 @@ function initDicts() {
 function renderSettings() {
   for (const r of $$('input[name=answer]')) r.checked = r.value === S.answer;
   $('#set-key').value = S.key;
-  $('#set-model').innerHTML = MODELS.map(([id, n]) => `<option value="${id}" ${id === S.model ? 'selected' : ''}>${n}</option>`).join('');
+  $('#set-model').innerHTML = modelsFor(S.key).map(([id, n]) => `<option value="${id}" ${id === S.model ? 'selected' : ''}>${n}</option>`).join('');
   $('#set-level').value = S.level;
   renderCloud(); renderInstall(); Y.warmUp();
 }
@@ -820,7 +820,9 @@ function initSettings() {
   $('#v-settings').addEventListener('change', e => {
     if (e.target.type === 'file') return;
     S.answer = $('input[name=answer]:checked')?.value || 'dict';
-    S.key = $('#set-key').value.trim(); S.model = $('#set-model').value; S.level = $('#set-level').value;
+    const key = $('#set-key').value.trim(), swap = modelsFor(key) !== modelsFor(S.key);
+    S.key = key; S.model = swap ? modelsFor(key)[0][0] : $('#set-model').value; S.level = $('#set-level').value;
+    if (swap) renderSettings();
     saveSettings();
   });
 }
