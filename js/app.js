@@ -283,6 +283,7 @@ function update() {
   const p = progress();
   $('#r-chapter').textContent = R.ch[R.ci].title || '';
   $('#r-timer').textContent = tTimer ? L.clock(Math.max(0, tTimer.left)) : '';
+  $('#r-timer').classList.toggle('low', !!tTimer && tTimer.left <= 300);
   $('#r-pos').textContent = (paged() ? `${R.page + 1} / ${R.pages} · ` : '') + Math.round(p * 100) + '%';
   $('#r-slider').value = Math.round(p * 1000);
   savePos();
@@ -404,7 +405,38 @@ function wordAt(x, y) {
   const text = block.textContent, at = pre.toString().length;
   const { from, to } = G.sentenceOf(text, at);
   const raw = text.slice(from, to), lead = raw.length - raw.trimStart().length;
-  return { word: t.slice(s, e), range, rect: hit, sentence: raw.trim(), start: at - from - lead };
+  return { word: t.slice(s, e), range, rect: hit, sentence: raw.trim(), start: at - from - lead, block, from: from + lead, to: from + lead + raw.trim().length };
+}
+
+// диапазон по смещениям в тексте блока — чтобы подсветить предложение целиком
+function rangeIn(block, from, to) {
+  const w = document.createTreeWalker(block, NodeFilter.SHOW_TEXT), r = document.createRange();
+  let pos = 0, n, started = false;
+  while ((n = w.nextNode())) {
+    const len = n.nodeValue.length;
+    if (!started && from < pos + len) { r.setStart(n, from - pos); started = true; }
+    if (started && to <= pos + len) { r.setEnd(n, to - pos); return r; }
+    pos += len;
+  }
+  return null;
+}
+const sentenceRange = hit => (hit.to > hit.from && rangeIn(hit.block, hit.from, hit.to)) || hit.range;
+const sameRange = (a, b) => a.startContainer === b.startContainer && a.startOffset === b.startOffset;
+function span(a, b) {
+  const r = document.createRange(), fwd = a.compareBoundaryPoints(Range.START_TO_START, b) <= 0, s = fwd ? a : b, e = fwd ? b : a;
+  r.setStart(s.startContainer, s.startOffset); r.setEnd(e.endContainer, e.endOffset);
+  return r;
+}
+function openPhrase(range) {
+  const text = range.toString().trim().replace(/\s+/g, ' ');
+  if (text.length < 2) return clearMark();
+  if (text.length > 600) { clearMark(); return toast('Слишком длинный отрывок — выделите покороче'); }
+  const el = n => (n.nodeType === 1 ? n : n.parentElement).closest('p, h2, h3, h4');
+  const a = el(range.startContainer), b = el(range.endContainer);
+  const ctxText = a && a === b ? a.textContent.trim() : text;
+  const rect = range.getBoundingClientRect();
+  countHint();
+  openSheet({ kind: 'phrase', text, sentence: ctxText.length > 700 ? text : ctxText, rect }, range);
 }
 
 function mark(range) { if (window.Highlight) CSS.highlights.set('lookup', new Highlight(range)); }
@@ -424,8 +456,50 @@ function initReader() {
     showChapter(i, { frac: clamp((target - R.pre[i]) / R.ch[i].len, 0, 0.999) });
   });
 
+  // Своё выделение вместо системного: у системного — меню «копировать/поделиться» и помощники браузера поверх текста.
+  // Двойное нажатие на слово — всё предложение; долгое нажатие и протяжка (мышью — просто протяжка) — фраза от слова до слова.
+  let pick = null, press = 0, down = null, skipClick = 0, lastTap = null, touchy = false;
+  const pickShow = () => mark(pick.b ? span(pick.a.range, pick.b.range) : sentenceRange(pick.a));
+  const pickMove = (x, y) => { const h = wordAt(x, y); if (!h) return; pick.b = sameRange(h.range, pick.a.range) ? null : h; pickShow(); };
+  const pickEnd = () => { const p = pick; pick = null; skipClick = Date.now(); openPhrase(p.b ? span(p.a.range, p.b.range) : sentenceRange(p.a)); };
+  content.addEventListener('selectstart', e => e.preventDefault());
+  if (/Android/.test(navigator.userAgent)) content.style.userSelect = 'none'; // в Chromium слово под пальцем находится и так; в Safari не проверено, там хватает selectstart
+  view.addEventListener('contextmenu', e => { if (touchy) e.preventDefault(); });
+  view.addEventListener('touchstart', e => {
+    touchy = true; clearTimeout(press);
+    if (e.touches.length !== 1 || e.target.closest('button, a')) return;
+    const { clientX: x, clientY: y } = e.touches[0];
+    down = { x, y };
+    press = setTimeout(() => {
+      const h = R && wordAt(x, y);
+      if (!h) return;
+      closeSheet(); pick = { a: h }; pickShow(); navigator.vibrate?.(12);
+    }, 450);
+  }, { passive: true });
+  view.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    if (pick) { if (e.cancelable) e.preventDefault(); pickMove(t.clientX, t.clientY); }
+    else if (down && Math.hypot(t.clientX - down.x, t.clientY - down.y) > 10) clearTimeout(press);
+  }, { passive: false });
+  view.addEventListener('touchend', e => { clearTimeout(press); if (pick) { if (e.cancelable) e.preventDefault(); pickEnd(); } }, { passive: false });
+  view.addEventListener('touchcancel', () => { clearTimeout(press); if (pick) { pick = null; clearMark(); } });
+  view.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button || e.target.closest('button, a')) return;
+    touchy = false;
+    const h = R && wordAt(e.clientX, e.clientY);
+    down = h ? { a: h } : null;
+  });
+  view.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' || !down?.a) return;
+    if (!(e.buttons & 1)) { down = null; return; }
+    if (pick) return pickMove(e.clientX, e.clientY);
+    const h = wordAt(e.clientX, e.clientY);
+    if (h && !sameRange(h.range, down.a.range)) { closeSheet(); pick = { a: down.a, b: h }; pickShow(); }
+  });
+  addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') return; down = null; if (pick) pickEnd(); });
+
   view.addEventListener('click', e => {
-    if (!R) return;
+    if (!R || Date.now() - skipClick < 400) return;
     const nav = e.target.closest('[data-nav]');
     if (nav) return showChapter(R.ci + +nav.dataset.nav);
     if (R.test && testClick(e)) return;
@@ -433,7 +507,12 @@ function initReader() {
     const note = e.target.closest('a.note');
     if (note) return openNote(note.dataset.note);
     const hit = wordAt(e.clientX, e.clientY);
-    if (hit) { countHint(); return openWord(hit); }
+    if (hit) {
+      const dbl = lastTap && Date.now() - lastTap.t < 400 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30;
+      lastTap = dbl ? null : { t: Date.now(), x: e.clientX, y: e.clientY };
+      if (dbl) return openPhrase(sentenceRange(hit));
+      countHint(); return openWord(hit);
+    }
     if (!$('#sheet').hidden) return closeSheet();
     const r = view.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
     if (paged() && x < 0.3) turn(-1);
@@ -445,7 +524,7 @@ function initReader() {
   let t0 = null;
   view.addEventListener('touchstart', e => { t0 = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
   view.addEventListener('touchend', e => {
-    if (!t0 || !paged() || !getSelection().isCollapsed) return;
+    if (!t0 || !paged() || pick || Date.now() - skipClick < 400) return;
     const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y;
     if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - t0.t < 700) { closeSheet(); turn(dx < 0 ? 1 : -1); }
     t0 = null;
@@ -465,24 +544,6 @@ function initReader() {
   });
   addEventListener('resize', debounce(relayout, 150));
 
-  // выделение фразы
-  document.addEventListener('selectionchange', debounce(() => {
-    const sel = getSelection(), txt = sel.toString().trim();
-    const ok = current === 'reader' && !sel.isCollapsed && content.contains(sel.anchorNode) && txt.length > 1 && txt.length <= 400;
-    $('#phrase-btn').hidden = !ok;
-  }, 200));
-  $('#phrase-btn').onclick = () => {
-    const sel = getSelection(), text = sel.toString().trim().replace(/\s+/g, ' ');
-    if (!text) return;
-    const range = sel.getRangeAt(0).cloneRange();
-    const el = n => (n.nodeType === 1 ? n : n.parentElement).closest('p, h2, h3, h4');
-    const a = el(range.startContainer), b = el(range.endContainer);
-    const ctxText = a && a === b ? a.textContent.trim() : text;
-    const rect = range.getBoundingClientRect();
-    sel.removeAllRanges(); $('#phrase-btn').hidden = true;
-    mark(range); countHint();
-    openSheet({ kind: 'phrase', text, sentence: ctxText.length > 700 ? text : ctxText, rect });
-  };
 }
 
 function openNote(id) {
@@ -505,8 +566,9 @@ function openWord(hit) {
   openSheet({ kind: 'word', text: hit.word, sentence: hit.sentence, start: hit.start, rect: hit.rect });
 }
 
-async function openSheet(c) {
+async function openSheet(c, range) {
   ai?.abort(); cur = c;
+  if (range) mark(range);
   const sh = $('#sheet');
   sh.classList.toggle('up', c.rect && (c.rect.top + c.rect.bottom) / 2 > innerHeight * 0.52);
   sh.hidden = false;
