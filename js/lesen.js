@@ -1,11 +1,12 @@
 // Книга «Lesen B1»: варианты заданий по чтению, которые открываются в читалке как обычная книга.
 // Каждый вариант — семь «глав»: начало, пять частей и итог.
-import { LESEN_B1, LESEN_B1_2 } from './tests/index.js';
+import { LESEN_B1, LESEN_B1_2, LESEN_B1_3 } from './tests/index.js';
 
-// Книг с заданиями две; ответы всех вариантов лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–…).
+// Книг с заданиями две; ответы всех вариантов лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–v28, v31–v38).
 export const BOOKS = [
   { id: 'lesen-b1', title: 'Lesen B1 — Prüfungstraining', label: 'Prüfungstraining', note: 'Формат DTZ', variants: LESEN_B1.variants },
   { id: 'lesen-b1-2', title: 'Lesen B1 — aktuelle Themen', label: 'aktuelle Themen', note: 'Формат DTZ · темы экзаменов осени 2026', variants: LESEN_B1_2.variants },
+  { id: 'lesen-b1-3', title: 'Lesen B1 — Prüfungsniveau', label: 'Prüfungsniveau', note: 'Формат DTZ · тексты как на экзамене, сложнее', variants: LESEN_B1_3.variants },
 ];
 export const MINUTES = LESEN_B1.minutes;
 export const TOTAL = 25;

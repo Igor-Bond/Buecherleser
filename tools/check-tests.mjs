@@ -53,7 +53,7 @@ function check(v, name) {
 const files = process.argv.slice(2);
 let variants;
 if (files.length) variants = await Promise.all(files.map(async f => [f, (await import(pathToFileURL(resolve(f)).href)).default]));
-else { const T = await import('../js/tests/index.js'); variants = [...T.LESEN_B1.variants, ...T.LESEN_B1_2.variants].map(v => [v.id, v]); }
+else { const T = await import('../js/tests/index.js'); variants = [...T.LESEN_B1.variants, ...T.LESEN_B1_2.variants, ...T.LESEN_B1_3.variants].map(v => [v.id, v]); }
 let bad = 0;
 const ids = new Set();
 for (const [name, v] of variants) {
