@@ -189,9 +189,6 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 }
 
 /* Lesen */
-.cover.test { flex-direction: column; gap: 2px; font-size: 20px; background: color-mix(in srgb, var(--accent) 16%, var(--bg)); }
-.cover.test b { font-size: 40px; color: var(--accent); line-height: 1; }
-.cover.test small { font: 500 11px var(--ui); color: var(--muted); margin-top: 8px; }
 #r-content .instr { font-size: .85em; text-indent: 0; text-align: left; hyphens: manual; background: var(--soft); border-radius: 8px; padding: .6em .8em; margin-bottom: 1em; line-height: 1.4; }
 #r-content .instr span { display: block; color: var(--muted); margin-top: .3em; font-family: var(--ui); font-size: .92em; }
 #r-content .tinfo { text-indent: 0; text-align: center; color: var(--muted); font-size: .9em; hyphens: manual; }

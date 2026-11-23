@@ -14,9 +14,15 @@ const MOTIF = {
   rings: '<circle cx="100" cy="96" r="34"/><circle cx="100" cy="96" r="22"/><circle cx="100" cy="96" r="5" fill="INK"/>',
   diamond: '<path d="M100 58 138 96 100 134 62 96Z"/><path d="M100 74 122 96 100 118 78 96Z"/>',
   book: '<path d="M100 74c-10-8-24-9-36-6v52c12-3 26-2 36 6 10-8 24-9 36-6V68c-12-3-26-2-36 6Z"/><path d="M100 74v52"/>',
+  checks: '<path d="M68 74l5 5 9-10M68 96l5 5 9-10M68 118l5 5 9-10"/><path d="M94 75H132M94 97H132M94 119H122"/>',
+  news: '<rect x="66" y="64" width="68" height="66" rx="3"/><path d="M77 78H123M77 92H98M77 104H98M77 116H98"/><rect x="106" y="92" width="17" height="24"/>',
+  watch: '<circle cx="100" cy="102" r="31"/><path d="M100 102V83M100 102l13 8"/><path d="M91 60H109M100 60V71"/>',
   leaf: '<path d="M68 128c0-40 24-64 64-64 0 40-24 64-64 64Z"/><path d="M68 128 114 82"/>',
 };
 const BY_WORD = [
+  [/prüfungstraining/i, 'checks', '#a8501f'],
+  [/aktuelle themen/i, 'news', '#8a3b2c'],
+  [/prüfungsniveau/i, 'watch', '#5e2c3c'],
   [/strom|elektrotechnik|energie|blitz/i, 'bolt', '#27405e'],
   [/kollege|elektriker|werkstatt|arbeit/i, 'plug', '#7a5520'],
   [/haus|wohnung|hof\b/i, 'house', '#6b2f33'],
