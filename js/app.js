@@ -133,7 +133,7 @@ async function renderLibrary() {
   const books = (await DB.all('books')).sort((a, b) => (b.opened || b.added) - (a.opened || a.added));
   $('#books').innerHTML = books.map(b => `
     <article class="book" data-id="${b.id}" tabindex="0">
-      <div class="cover${b.test ? ' test' : ''}">${b.test ? 'Lesen<b>B1</b><small>Prüfungstraining</small>' : b.cover ? `<img src="${b.cover}" alt="">` : esc(b.title)}</div>
+      <div class="cover${b.test ? ' test' : ''}">${b.test ? `Lesen<b>B1</b><small>${esc(b.label || 'Prüfungstraining')}</small>` : b.cover ? `<img src="${b.cover}" alt="">` : esc(b.title)}</div>
       <div class="bt">${esc(b.title)}</div><div class="ba">${esc(b.author || '')}</div>
       <div class="prog"><i style="width:${Math.round((b.progress || 0) * 100)}%"></i></div>
       ${b.test ? '' : '<button class="del" aria-label="Удалить книгу">×</button>'}
@@ -186,7 +186,7 @@ async function openBook(id) {
   const meta = await DB.get('books', id);
   stopTimer();
   const test = meta?.test ? makeTest((await DB.get('kv', 'lesen')) || {}) : null;
-  const c = test ? { ...L.build(test), notes: {} } : await DB.get('content', id);
+  const c = test ? { ...L.build(test, id), notes: {} } : await DB.get('content', id);
   if (!meta || !c) return toast('Книга не найдена');
   const pre = []; let total = 0;
   for (const ch of c.chapters) { pre.push(total); total += ch.len; }
@@ -854,8 +854,10 @@ async function start() {
     await DB.put('kv', 1, 'demo');
     if (!(await DB.all('books')).length) await storeBook(parseFb2Text(DEMO_FB2));
   }
-  const lesen = await DB.get('books', L.BOOK_ID);
-  await DB.put('books', { ...L.bookMeta(), ...(lesen && { added: lesen.added, opened: lesen.opened, pos: lesen.pos, progress: lesen.progress }) });
+  for (const b of L.BOOKS) {
+    const old = await DB.get('books', b.id);
+    await DB.put('books', { ...L.bookMeta(b), ...(old && { added: old.added, opened: old.opened, pos: old.pos, progress: old.progress }) });
+  }
   await renderLibrary();
   installBuiltin();
   Y.resume();

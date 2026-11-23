@@ -1,18 +1,22 @@
 // Книга «Lesen B1»: варианты заданий по чтению, которые открываются в читалке как обычная книга.
 // Каждый вариант — семь «глав»: начало, пять частей и итог.
-import { LESEN_B1 } from './tests/index.js';
+import { LESEN_B1, LESEN_B1_2 } from './tests/index.js';
 
-export const BOOK_ID = 'lesen-b1';
+// Книг с заданиями две; ответы всех вариантов лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–…).
+export const BOOKS = [
+  { id: 'lesen-b1', title: 'Lesen B1 — Prüfungstraining', label: 'Prüfungstraining', note: 'Формат DTZ', variants: LESEN_B1.variants },
+  { id: 'lesen-b1-2', title: 'Lesen B1 — aktuelle Themen', label: 'aktuelle Themen', note: 'Формат DTZ · темы экзаменов осени 2026', variants: LESEN_B1_2.variants },
+];
 export const MINUTES = LESEN_B1.minutes;
 export const TOTAL = 25;
-export const bookMeta = () => ({
-  id: BOOK_ID, test: true, title: 'Lesen B1 — Prüfungstraining',
-  author: `Формат DTZ · вариантов: ${LESEN_B1.variants.length}`, added: Date.now(), progress: 0,
+export const bookMeta = b => ({
+  id: b.id, test: true, title: b.title, label: b.label,
+  author: `${b.note} · вариантов: ${b.variants.length}`, added: Date.now(), progress: 0,
 });
 
 const LET = 'abcdefghi';
 export const itemsOf = v => v.parts.flatMap(p => p.groups.flatMap(g => g.items));
-export const variant = id => LESEN_B1.variants.find(v => v.id === id);
+export const variant = id => BOOKS.flatMap(b => b.variants).find(v => v.id === id);
 
 export function score(v, st) {
   const parts = v.parts.map(p => {
@@ -72,9 +76,9 @@ function resultHtml(v, st) {
 }
 
 // ctx: { st(vid) → состояние варианта, timerVid() → вариант с запущенным таймером }
-export function build(ctx) {
+export function build(ctx, bookId) {
   const chapters = [], toc = [];
-  for (const v of LESEN_B1.variants) {
+  for (const v of (BOOKS.find(b => b.id === bookId) || BOOKS[0]).variants) {
     const st = () => ctx.st(v.id);
     toc.push({ title: v.title, depth: 0, ch: chapters.length });
     chapters.push({ vid: v.id, kind: 'start', title: v.title, len: 300, render: () => startHtml(v, st(), ctx) });
