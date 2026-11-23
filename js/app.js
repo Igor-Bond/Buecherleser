@@ -859,6 +859,13 @@ function initCloud() {
 
 // Установка на главный экран и полный экран
 let installEvt = null;
+let swReg = null;
+async function checkUpdate() {
+  if (!swReg) return toast('Обновление доступно, когда приложение открыто с сайта');
+  toast('Проверяю…', 20000);
+  try { await swReg.update(); } catch { return toast('Нет связи с сайтом'); }
+  toast(swReg.installing || swReg.waiting ? 'Загружаю обновление — приложение перезапустится само' : 'Установлена последняя версия', 6000);
+}
 const standalone = () => matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches || navigator.standalone === true;
 function renderInstall() {
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -867,6 +874,10 @@ function renderInstall() {
     : ios ? 'На iPhone: кнопка «Поделиться» → «На экран „Домой“». После этого читалка открывается на весь экран.'
     : 'Чтобы открывать на весь экран с главного экрана: меню браузера → «Установить приложение» или «Добавить на главный экран».';
   $('#inst-btn').hidden = !installEvt || standalone();
+  window.caches?.keys().then(ks => {
+    const v = Math.max(0, ...ks.filter(k => k.startsWith('buecherleser-v')).map(k => +k.slice(14)));
+    $('#ver').textContent = v ? `Версия ${v}. Обновления приходят сами при открытии приложения.` : '';
+  });
   $('#fs-btn').hidden = standalone() || !document.documentElement.requestFullscreen;
   $('#fs-btn').textContent = document.fullscreenElement ? 'Выйти из полного экрана' : 'На весь экран';
 }
@@ -875,6 +886,7 @@ function initInstall() {
   addEventListener('appinstalled', () => { installEvt = null; renderInstall(); toast('Приложение установлено'); });
   document.addEventListener('fullscreenchange', renderInstall);
   $('#inst-btn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; renderInstall(); };
+  $('#upd-btn').onclick = checkUpdate;
   $('#fs-btn').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => toast('Браузер не разрешил полный экран'));
 }
 
@@ -941,6 +953,21 @@ async function start() {
   const installed = await D.ensureBase(p => toast(`Устанавливаю словарь… ${Math.round(p * 100)}%`, 120000));
   if (installed) toast('Словарь установлен', 2000);
   dictNames = Object.fromEntries((await D.listDicts()).map(d => [d.id, d.name]));
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    // Установленное приложение подолгу живёт в фоне и само не перезагружается: проверяем обновление при каждом возврате
+    // и перезагружаемся, как только новая версия взяла управление.
+    const sw = navigator.serviceWorker, had = !!sw.controller;
+    sw.register('sw.js').then(reg => { swReg = reg; }).catch(() => {});
+    sw.addEventListener('controllerchange', () => {
+      if (!had) return;
+      if (tTimer) return toast('Обновление загружено — заработает после перезапуска приложения', 6000);
+      savePos.flush(); location.reload();
+    });
+    let checked = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden || Date.now() - checked < 60000) return;
+      checked = Date.now(); swReg?.update().catch(() => {});
+    });
+  }
 }
 start().catch(err => { console.error(err); toast('Ошибка запуска: ' + err.message, 8000); });
