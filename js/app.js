@@ -514,7 +514,8 @@ async function openSheet(c) {
   if (cur !== c) return;
   $('#sh-save').textContent = c.saved ? '★' : '☆';
   $('#sh-save').classList.toggle('on', c.saved);
-  setTab(S.answer === 'ai' && S.key ? 'ai' : 'dict');
+  // Фразе словарь даёт только пословный разбор, связный перевод — у ИИ: при наличии ключа открываем сразу его
+  setTab((S.answer === 'ai' || c.kind === 'phrase') && S.key ? 'ai' : 'dict');
 }
 
 function closeSheet() { ai?.abort(); cur = null; $('#sheet').hidden = true; clearMark(); }
