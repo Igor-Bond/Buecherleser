@@ -4,6 +4,7 @@ import * as G from './german.js';
 import { parseBookFile, parseFb2Text } from './fb2.js';
 import { explain, MODELS, modelsFor, refreshModels } from './llm.js';
 import { DEMO_FB2 } from './demo.js';
+import { coverSvg } from './cover.js';
 import * as L from './lesen.js';
 import * as Y from './sync.js';
 
@@ -133,7 +134,7 @@ async function renderLibrary() {
   const books = (await DB.all('books')).sort((a, b) => (b.opened || b.added) - (a.opened || a.added));
   $('#books').innerHTML = books.map(b => `
     <article class="book" data-id="${b.id}" tabindex="0">
-      <div class="cover${b.test ? ' test' : ''}">${b.test ? `Lesen<b>B1</b><small>${esc(b.label || 'Prüfungstraining')}</small>` : b.cover ? `<img src="${b.cover}" alt="">` : esc(b.title)}</div>
+      <div class="cover${b.test ? ' test' : b.cover ? '' : ' art'}">${b.test ? `Lesen<b>B1</b><small>${esc(b.label || 'Prüfungstraining')}</small>` : b.cover ? `<img src="${b.cover}" alt="">` : coverSvg(b.title, b.author)}</div>
       <div class="bt">${esc(b.title)}</div><div class="ba">${esc(b.author || '')}</div>
       <div class="prog"><i style="width:${Math.round((b.progress || 0) * 100)}%"></i></div>
       ${b.test ? '' : '<button class="del" aria-label="Удалить книгу">×</button>'}
