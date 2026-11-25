@@ -19,7 +19,27 @@ const LET = 'abcdefghi';
 export const itemsOf = v => v.parts.flatMap(p => p.groups.flatMap(g => g.items));
 export const variant = id => BOOKS.flatMap(b => b.variants).find(v => v.id === id);
 
+// В первой книге (v01–v20) ответ «x — ничего не подходит» всегда стоял в задании 10. Здесь он меняется местами с другим
+// заданием Teil 2 — у каждого варианта со своим (иногда остаётся на 10). Если ответы на 6–10 уже даны при старом порядке,
+// порядок для этого варианта не меняется (st.ord), иначе сохранённые ответы съехали бы на чужие вопросы.
+const moved = new Map();
+export function view(v, st) {
+  const num = +v.id.slice(1);
+  if (!(num <= 20)) return v;
+  st.ord ||= [6, 7, 8, 9, 10].some(n => st.ans[n] != null) ? 'old' : 'new';
+  const to = 6 + (num * 2 + 1) % 5;
+  if (st.ord === 'old' || to === 10) return v;
+  if (!moved.has(v.id)) {
+    const parts = v.parts.map((p, i) => i !== 1 ? p : { ...p, groups: p.groups.map(g => ({ ...g, items: g.items.map(it => ({ ...it })) })) });
+    const its = parts[1].groups.flatMap(g => g.items), a = its.find(i => i.n === to), b = its.find(i => i.n === 10);
+    if (a && b && b.a === 8) [a.q, a.a, b.q, b.a] = [b.q, b.a, a.q, a.a];
+    moved.set(v.id, { ...v, parts });
+  }
+  return moved.get(v.id);
+}
+
 export function score(v, st) {
+  v = view(v, st);
   const parts = v.parts.map(p => {
     const its = p.groups.flatMap(g => g.items);
     return { total: its.length, ok: its.filter(it => st.ans[it.n] === it.a).length };
@@ -54,6 +74,7 @@ function startHtml(v, st, ctx) {
 }
 
 function partHtml(v, pi, st) {
+  v = view(v, st);
   const p = v.parts[pi];
   let h = `<h2>${p.title}</h2><p class="instr">${p.instr}<span lang="ru">${p.ru}</span></p>`;
   h += p.groups.map(g => `<section class="grp">${g.html ? `<div class="tx${p.compact ? ' ads' : ''}">${g.html}</div>` : ''}${g.items.map(it => itemHtml(it, p, st)).join('')}</section>`).join('');

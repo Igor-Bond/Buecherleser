@@ -877,7 +877,8 @@ function renderInstall() {
   $('#inst-btn').hidden = !installEvt || standalone();
   window.caches?.keys().then(ks => {
     const v = Math.max(0, ...ks.filter(k => k.startsWith('buecherleser-v')).map(k => +k.slice(14)));
-    $('#ver').textContent = v ? `Версия ${v}. Обновления приходят сами при открытии приложения.` : '';
+    const mode = ['fullscreen', 'standalone', 'minimal-ui', 'browser'].find(m => matchMedia(`(display-mode: ${m})`).matches) || '?';
+    $('#ver').textContent = v ? `Версия ${v}, режим окна: ${mode}. Обновления приходят сами при открытии приложения.` : '';
   });
   $('#fs-btn').hidden = standalone() || !document.documentElement.requestFullscreen;
   $('#fs-btn').textContent = document.fullscreenElement ? 'Выйти из полного экрана' : 'На весь экран';
