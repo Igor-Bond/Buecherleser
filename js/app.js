@@ -6,6 +6,8 @@ import { explain, MODELS, modelsFor, refreshModels } from './llm.js';
 import { DEMO_FB2 } from './demo.js';
 import { coverSvg } from './cover.js';
 import * as L from './lesen.js';
+import * as Sp from './speak.js';
+import { TEST_LINES, playsText, EXAM_PLAYS } from './hoeren.js';
 import * as Y from './sync.js';
 
 const $ = s => document.querySelector(s);
@@ -42,7 +44,7 @@ const FONTS = {
 const DEF = {
   look: { theme: 'sepia', bg: THEMES.sepia[0], fg: THEMES.sepia[1], font: 'С засечками', size: 19, lh: 1.6, para: 0.5,
     indent: true, margin: 24, maxw: 720, align: 'justify', hyph: true, mode: 'paged' },
-  answer: 'dict', key: '', model: MODELS[0][0], level: 'A2',
+  answer: 'dict', key: '', model: MODELS[0][0], level: 'A2', rate: 1,
 };
 let S = DEF, userFonts = [];
 const saveSettings = debounce(() => { S.at = Date.now(); DB.put('kv', S, 'settings'); Y.touch(); }, 250);
@@ -115,7 +117,7 @@ async function addFont(f) { document.fonts.add(await new FontFace(f.name, f.buf)
 
 let current = 'library';
 function show(name, push = true) {
-  if (current === 'reader' && name !== 'reader') { savePos.flush?.(); closeSheet(); closePanels(); }
+  if (current === 'reader' && name !== 'reader') { savePos.flush?.(); closeSheet(); closePanels(); Sp.stop(); }
   current = name;
   for (const v of $$('.view')) v.hidden = v.id !== 'v-' + name;
   if (push) history.pushState({ v: name }, '');
@@ -194,6 +196,8 @@ async function openBook(id) {
   const pre = []; let total = 0;
   for (const ch of c.chapters) { pre.push(total); total += ch.len; }
   R = { meta, ch: c.chapters, toc: c.toc || [], notes: c.notes || {}, pre, total, ci: 0, page: 0, pages: 1, W: 0, blocks: [], test };
+  // список голосов приходит с задержкой: когда он появился, начальная страница варианта Hören показывает его
+  if (test && L.BOOKS.find(b => b.id === id)?.hoeren && Sp.status() !== 'ok') { const r = R; Sp.ready().then(() => { if (R === r && current === 'reader' && R.ch[R.ci].kind === 'start' && Sp.status() !== 'unknown') showChapter(R.ci); }); }
   $('#r-title').textContent = meta.title;
   show('reader');
   $('#v-reader').classList.remove('bare');
@@ -204,6 +208,7 @@ async function openBook(id) {
 }
 
 function showChapter(i, { block = 0, last = false, frac = 0 } = {}) {
+  Sp.stop();
   R.ci = i;
   let html = R.ch[i].render ? R.ch[i].render() : R.ch[i].html;
   if (!paged()) {
@@ -318,11 +323,12 @@ function makeTest(states) {
     states,
     st: vid => states[vid] ??= { ans: {}, used: 0 },
     timerVid: () => tTimer?.vid,
+    rate: () => S.rate || 1,
     save: vid => { if (tTimer?.vid === vid) states[vid].sec = spent(); states[vid].at = Date.now(); persist(); },
   };
 }
 // Потраченное время копится в состоянии варианта (sec): пауза, перезапуск таймера и закрытие приложения его не обнуляют.
-const spent = () => Math.min(L.MINUTES * 60, tTimer.base + Math.round((Date.now() - tTimer.t0) / 1000));
+const spent = () => Math.min(tTimer.max, tTimer.base + Math.round((Date.now() - tTimer.t0) / 1000));
 function stopTimer() {
   if (!tTimer) return;
   const t = tTimer;
@@ -338,8 +344,9 @@ function countHint() {
 const chapterOf = (vid, kind) => R.ch.findIndex(c => c.vid === vid && c.kind === kind);
 
 function finishVariant(vid, auto) {
-  const T = R.test, st = T.st(vid), missing = L.TOTAL - Object.keys(st.ans).length;
+  const T = R.test, st = T.st(vid), missing = L.bookOf(vid).total - Object.keys(st.ans).length;
   if (!auto && missing && !confirm(`Без ответа осталось заданий: ${missing}. Завершить и проверить?`)) return;
+  Sp.stop();
   st.done = true; st.score = L.score(L.variant(vid), st).ok; st.date = Date.now();
   if (tTimer?.vid === vid) stopTimer();
   T.save(vid);
@@ -358,16 +365,18 @@ function testClick(e) {
     T.save(ch.vid);
     return true;
   }
+  const pl = e.target.closest('[data-play]');
+  if (pl) { playText(ch.vid, pl.dataset.play); return true; }
   const act = e.target.closest('[data-t]')?.dataset.t;
   if (!act) return false;
   const first = chapterOf(ch.vid, 'start');
   if (act === 'timer') {
     stopTimer();
-    tTimer = { vid: ch.vid, T, base: st.sec || 0, t0: Date.now() };
-    tTimer.left = L.MINUTES * 60 - tTimer.base;
+    tTimer = { vid: ch.vid, T, base: st.sec || 0, t0: Date.now(), max: L.bookOf(ch.vid).minutes * 60 };
+    tTimer.left = tTimer.max - tTimer.base;
     tTimer.tick = setInterval(() => {
       if (!tTimer || !R?.test) return stopTimer();
-      tTimer.left = L.MINUTES * 60 - spent();
+      tTimer.left = tTimer.max - spent();
       if (tTimer.left <= 0) finishVariant(tTimer.vid, true);
       else if (current === 'reader') update();
     }, 1000);
@@ -375,13 +384,46 @@ function testClick(e) {
   } else if (act === 'timer-off') { stopTimer(); showChapter(R.ci); }
   else if (act === 'finish') finishVariant(ch.vid, false);
   else if (act === 'review') showChapter(first + 1);
+  else if (act === 'rate-' || act === 'rate+') {
+    S.rate = +clamp((S.rate || 1) + (act === 'rate+' ? 0.1 : -0.1), 0.6, 1.3).toFixed(1); saveSettings();
+    const out = content.querySelector('.rate'); if (out) out.textContent = S.rate.toFixed(1).replace('.', ',') + '×';
+  } else if (act === 'voice-test') {
+    if (Sp.status() === 'none' || Sp.status() === 'off') toast('Немецкого голоса на устройстве нет — как его установить, написано выше', 6000);
+    else Sp.speak(TEST_LINES, { rate: S.rate || 1 }).then(ok => { if (!ok && Sp.wasSilent()) toast('Голос не начал говорить: проверьте звук и установлен ли немецкий голос', 7000); });
+  }
   else if (act === 'reset') {
     if (!confirm('Стереть ответы этого варианта и начать заново?')) return true;
     if (tTimer?.vid === ch.vid) stopTimer();
+    Sp.stop();
     T.states[ch.vid] = { ans: {}, used: 0 }; T.save(ch.vid);
     showChapter(first);
   }
   return true;
+}
+
+// Hören: прочитать текст группы вслух. Повторное нажатие останавливает; счётчик растёт, когда текст дослушан до конца.
+let playing = null;
+function playText(vid, key) {
+  const same = playing === vid + key;
+  Sp.stop();
+  if (same) return;
+  const s = Sp.status();
+  if (s === 'off') return toast('Этот браузер не умеет озвучивать текст', 5000);
+  if (s === 'none') return toast('На устройстве нет немецкого голоса. Как его установить — на первой странице варианта', 7000);
+  const btn = () => R?.test && R.ch[R.ci].vid === vid ? content.querySelector(`[data-play="${key}"]`) : null;
+  const paint = on => { const b = btn(); if (b) { b.textContent = on ? '■ Остановить' : '▶ Прослушать'; b.classList.toggle('on', on); } };
+  const T = R.test;
+  playing = vid + key; paint(true);
+  Sp.speak(L.audioOf(vid, key), { rate: S.rate || 1 }).then(ok => {
+    paint(false);
+    if (playing === vid + key) playing = null;
+    if (!ok && Sp.wasSilent()) toast('Голос не начал говорить. Проверьте звук и немецкий голос — подсказка на первой странице варианта', 7000);
+    const st = T.st(vid);
+    if (!ok || st.done) return;
+    (st.plays ||= {})[key] = (st.plays[key] || 0) + 1; T.save(vid);
+    const out = btn()?.parentElement.querySelector('.plays');
+    if (out) { out.textContent = playsText(st.plays[key], false); out.classList.toggle('over', st.plays[key] > EXAM_PLAYS); }
+  });
 }
 
 function closePanels() { $('#look').hidden = $('#toc').hidden = $('#scrim').hidden = true; }

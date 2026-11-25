@@ -222,3 +222,18 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 #r-content .score small { display: block; font: 500 .4em var(--ui); color: var(--muted); }
 #r-content .tx:has(.board) { border-left: 0; padding-left: 0; }
 .btns { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+/* Hören: кнопка прослушивания, счётчик, расшифровка */
+#r-content .hear { display: flex; align-items: center; gap: .7em; flex-wrap: wrap; margin-bottom: .6em; break-inside: avoid; font-family: var(--ui); font-size: .85em; text-align: left; }
+#r-content .hear-l { color: var(--accent); min-width: 5.2em; }
+#r-content .play { padding: .45em .9em; white-space: nowrap; }
+#r-content .play.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--bg)); }
+#r-content .plays { color: var(--muted); font-size: .9em; }
+#r-content .plays.over { color: #cf3f4f; }
+#r-content .script { font-size: .93em; }
+#r-content .script p { text-align: left; margin-bottom: .35em; }
+#r-content .script .sp { color: var(--muted); font-weight: 600; }
+#r-content .ex-sol, #r-content .topic { text-indent: 0; text-align: left; font-size: .9em; }
+#r-content .topic { font-weight: 700; }
+#r-content .speech { margin-top: 1.2em; border-top: 1px solid var(--line); padding-top: 1em; }
+#r-content .speech .warn { color: #cf3f4f; font-weight: 600; }
+#r-content .speech .rate { display: inline-block; min-width: 3.2em; text-align: center; margin-right: .5em; font-weight: 600; }

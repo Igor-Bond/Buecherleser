@@ -17,9 +17,11 @@ const MOTIF = {
   checks: '<path d="M68 74l5 5 9-10M68 96l5 5 9-10M68 118l5 5 9-10"/><path d="M94 75H132M94 97H132M94 119H122"/>',
   news: '<rect x="66" y="64" width="68" height="66" rx="3"/><path d="M77 78H123M77 92H98M77 104H98M77 116H98"/><rect x="106" y="92" width="17" height="24"/>',
   watch: '<circle cx="100" cy="102" r="31"/><path d="M100 102V83M100 102l13 8"/><path d="M91 60H109M100 60V71"/>',
+  ear: '<path d="M70 106V98a30 30 0 0 1 60 0v8"/><rect x="62" y="104" width="16" height="28" rx="6"/><rect x="122" y="104" width="16" height="28" rx="6"/><path d="M93 112v12M100 106v24M107 112v12"/>',
   leaf: '<path d="M68 128c0-40 24-64 64-64 0 40-24 64-64 64Z"/><path d="M68 128 114 82"/>',
 };
 const BY_WORD = [
+  [/^hören\b/i, 'ear', '#1f4f5c'],
   [/prüfungstraining/i, 'checks', '#a8501f'],
   [/aktuelle themen/i, 'news', '#8a3b2c'],
   [/prüfungsniveau/i, 'watch', '#5e2c3c'],
