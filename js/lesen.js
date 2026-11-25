@@ -1,10 +1,10 @@
 // Книга «Lesen B1»: варианты заданий по чтению, которые открываются в читалке как обычная книга.
 // Каждый вариант — семь «глав»: начало, пять частей и итог.
 import { LESEN_B1, LESEN_B1_2, LESEN_B1_3 } from './tests/index.js';
-import { HOEREN_B1 } from './hoeren/index.js';
+import { HOEREN_B1, HOEREN_B1_2 } from './hoeren/index.js';
 import * as H from './hoeren.js';
 
-// Ответы всех вариантов всех книг лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–v28, v31–v38, h01–h08).
+// Ответы всех вариантов всех книг лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–v28, v31–v38, h01–h08, h11–h18).
 // b1 и a2 — сколько верных ответов примерно соответствует уровню (на экзамене чтение и аудирование оцениваются вместе: 33 и 20 из 45).
 const LESEN = { minutes: LESEN_B1.minutes, total: 25, b1: 19, a2: 11 };
 export const BOOKS = [
@@ -13,6 +13,8 @@ export const BOOKS = [
   { id: 'lesen-b1-3', title: 'Lesen B1 — Prüfungsniveau', label: 'Prüfungsniveau', note: 'Формат DTZ · тексты как на экзамене, сложнее', variants: LESEN_B1_3.variants, ...LESEN },
   { id: 'hoeren-b1', title: 'Hören B1 — Hörtraining', label: 'Hörtraining', note: 'Формат DTZ · читает голос устройства', variants: HOEREN_B1.variants,
     hoeren: true, minutes: HOEREN_B1.minutes, total: 20, b1: 15, a2: 9 },
+  { id: 'hoeren-b1-2', title: 'Hören B1 — Prüfungsniveau', label: 'Prüfungsniveau', note: 'Формат DTZ · сложнее: тексты длиннее, ответы другими словами', variants: HOEREN_B1_2.variants,
+    hoeren: true, minutes: HOEREN_B1_2.minutes, total: 20, b1: 15, a2: 9 },
 ];
 export const bookMeta = b => ({
   id: b.id, test: true, title: b.title, label: b.label,

@@ -21,6 +21,7 @@ const MOTIF = {
   leaf: '<path d="M68 128c0-40 24-64 64-64 0 40-24 64-64 64Z"/><path d="M68 128 114 82"/>',
 };
 const BY_WORD = [
+  [/^hören\b.*prüfungsniveau/i, 'ear', '#2c3a5e'],
   [/^hören\b/i, 'ear', '#1f4f5c'],
   [/prüfungstraining/i, 'checks', '#a8501f'],
   [/aktuelle themen/i, 'news', '#8a3b2c'],

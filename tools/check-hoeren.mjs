@@ -14,6 +14,7 @@ function check(v) {
   const need = (ok, msg) => { if (!ok) err.push(msg); };
   need(/^h\d\d$/.test(v.id || ''), `id должен быть вида h07, а не «${v.id}»`);
   need(/^Variante \d+$/.test(v.title || ''), 'title должен быть «Variante N»');
+  const hard = +(v.id || '').slice(1) > 10; // вторая книга: тексты длиннее
   need(typeof v.about === 'string' && v.about.length > 10, 'нет about');
   need(Array.isArray(v.parts) && v.parts.length === 4, 'должно быть 4 части');
   if (err.length) return { err, warn };
@@ -39,7 +40,7 @@ function check(v) {
         need(g.audio.every((l, i) => !i || l[0] !== g.audio[i - 1][0]), `${G}: две реплики подряд у одного говорящего`);
         need(g.who && [...codes].every(c => g.who[c]), `${G}: нет подписей говорящих (who)`);
       } else need(codes.size === 1, `${G}: один текст — один говорящий`);
-      const [lo, hi] = pi === 2 ? [70, 190] : pi === 3 ? [35, 80] : [40, 95];
+      const [lo, hi] = hard ? (pi === 2 ? [120, 205] : pi === 3 ? [50, 90] : [60, 110]) : pi === 2 ? [70, 190] : pi === 3 ? [35, 80] : [40, 95];
       if (words < lo || words > hi) warn.push(`${G}: слов ${words}, обычно ${lo}–${hi}`);
     });
     if (pi < 2) {
@@ -68,7 +69,7 @@ function check(v) {
 const args = process.argv.slice(2), flags = args.filter(a => a.startsWith('--')), files = args.filter(a => !a.startsWith('--'));
 let variants;
 if (files.length) variants = await Promise.all(files.map(async f => [f, (await import(pathToFileURL(resolve(f)).href)).default]));
-else variants = (await import('../js/hoeren/index.js')).HOEREN_B1.variants.map(v => [v.id, v]);
+else { const I = await import('../js/hoeren/index.js'); variants = [...I.HOEREN_B1.variants, ...I.HOEREN_B1_2.variants].map(v => [v.id, v]); }
 
 if (flags.includes('--dump') || flags.includes('--key')) {
   const key = flags.includes('--key');
