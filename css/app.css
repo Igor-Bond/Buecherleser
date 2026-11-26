@@ -250,6 +250,7 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 #r-content .rm span { display: block; font-family: var(--ui); font-size: .8em; color: var(--muted); }
 #r-content .sp-card h3 { text-align: left; }
 #r-content .sp-scene { margin: 0 0 .8em; break-inside: avoid; }
+#r-content .sp-scene img { display: block; width: 100%; height: auto; max-width: 30em; margin: 0 auto; border-radius: 8px; }
 #r-content .sp-scene svg { display: block; width: 100%; max-width: 30em; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
 #r-content .sp-q { text-indent: 0; text-align: left; margin-bottom: .2em; font-size: .93em; }
 #r-content .sp-list { margin: 0 0 .8em 1.2em; padding: 0; text-align: left; hyphens: manual; font-size: .93em; }

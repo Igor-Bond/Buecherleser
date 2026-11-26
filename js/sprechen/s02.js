@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'arzt', topic: 'Thema: Beim Arzt',
-    pic: 'Ein Wartezimmer in einer Arztpraxis. Rechts sitzt eine Mitarbeiterin im weißen Kittel an der Anmeldung vor einem Computer. Links sitzen ein älterer Mann und eine Frau mit einem kleinen Kind auf Stühlen und warten. An der Wand hängen eine Uhr und ein Schild.',
+    scene: 'arzt', img: 'arzt.jpg', topic: 'Thema: Beim Arzt',
+    pic: 'Ein Behandlungszimmer in einer Arztpraxis. Eine Ärztin mit langen blonden Haaren und weißem Kittel misst einem jungen Mann den Blutdruck. Der Mann trägt ein weißes T-Shirt und sitzt am Tisch. Links sitzt eine junge Frau in einem karierten Hemd auf einem Stuhl und schaut zu. Im Hintergrund sind eine Tür und ein weißer Schrank.',
     ask: ['Welche Erfahrungen haben Sie mit Arztbesuchen in Deutschland gemacht?', 'Was ist in Ihrem Heimatland anders, wenn man zum Arzt geht?'],
     sample: [
-      ['m1', 'Auf dem Bild sehe ich ein Wartezimmer in einer Arztpraxis. Rechts ist die Anmeldung. Dort sitzt eine Mitarbeiterin im weißen Kittel vor einem Computer. Links sitzen drei Personen auf Stühlen: ein älterer Mann und eine Frau mit einem kleinen Kind. An der Wand hängen eine Uhr und ein Schild. Ich glaube, die Leute warten schon lange. Vielleicht ist das Kind krank, und die Mutter macht sich Sorgen. Die Situation ist ruhig, aber ein bisschen langweilig.'],
+      ['m1', 'Auf dem Bild sehe ich ein Zimmer in einer Arztpraxis. Rechts sitzt eine Ärztin, sie hat lange blonde Haare und trägt einen weißen Kittel. Sie misst einem jungen Mann den Blutdruck. Der Mann trägt ein weißes T-Shirt und sitzt ruhig am Tisch. Links sitzt eine junge Frau auf einem Stuhl und schaut zu. Ich glaube, sie ist seine Freundin oder seine Schwester und hat ihn zum Arzt begleitet. Vielleicht fühlt sich der Mann nicht gut. Das ist eine normale Untersuchung beim Arzt.'],
       ['f1', 'Welche Erfahrungen haben Sie mit Arztbesuchen in Deutschland gemacht?'],
       ['m1', 'Meistens gute Erfahrungen. Mein Hausarzt ist sehr freundlich und erklärt alles langsam. Aber man braucht fast immer einen Termin, und manchmal muss man lange warten. Einmal habe ich drei Wochen auf einen Termin beim Augenarzt gewartet.'],
       ['f1', 'Was ist in Ihrem Heimatland anders, wenn man zum Arzt geht?'],

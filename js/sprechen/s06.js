@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'kurs', topic: 'Thema: Deutsch lernen',
-    pic: 'Ein Deutschkurs. Die Lehrerin steht rechts neben der Tafel, an der Tafel steht: Guten Tag! Wie geht es Ihnen? Vier Erwachsene sitzen am Tisch, vor ihnen liegen Hefte und Bücher.',
+    scene: 'kurs', img: 'kurs.jpg', topic: 'Thema: Deutsch lernen',
+    pic: 'Ein Unterrichtsraum. Rechts steht ein Lehrer mit Brille, er trägt ein hellblaues Hemd und eine blaue Weste, hält einen Stift in der Hand und erklärt etwas. Zwei junge Frauen sitzen an einem langen Tisch und hören zu. Eine Frau hat blaue Haare und eine Brille, vor ihr liegen ein Heft und Stifte. Im Hintergrund sind große Fenster und eine Tafel.',
     ask: ['Wie lernen Sie selbst am besten Deutsch?', 'Wie lernt man in Ihrem Heimatland in der Schule? Was ist dort anders?'],
     sample: [
-      ['m1', 'Auf dem Bild sehe ich einen Deutschkurs. Rechts neben der Tafel steht die Lehrerin. An der Tafel steht: Guten Tag! Wie geht es Ihnen? Vier Erwachsene sitzen am Tisch, und vor ihnen liegen Hefte und Bücher. Ich glaube, dass es ein Kurs für Anfänger ist, weil die Sätze an der Tafel sehr einfach sind. Vielleicht üben die Leute gerade, wie man sich begrüßt. Die Situation ist: Erwachsene lernen zusammen Deutsch.'],
+      ['m1', 'Auf dem Bild sehe ich einen Unterrichtsraum. Rechts steht der Lehrer. Er trägt eine Brille, ein hellblaues Hemd und eine blaue Weste. In der Hand hält er einen Stift, und er erklärt gerade etwas. Zwei junge Frauen sitzen an einem langen Tisch und hören ihm zu. Eine Frau hat blaue Haare, vor ihr liegen ein Heft und Stifte. Ich glaube, das ist ein Kurs für Erwachsene, vielleicht ein Sprachkurs. Die Frauen sehen sehr aufmerksam aus. Hinter ihnen sind große Fenster, deshalb ist es hell im Raum.'],
       ['f1', 'Wie lernen Sie selbst am besten Deutsch?'],
       ['m1', 'Am besten lerne ich, wenn ich mit Menschen spreche. Bei der Arbeit rede ich in der Pause immer mit meinen deutschen Kollegen. Zu Hause höre ich Radio und schreibe neue Wörter in ein Heft. Grammatik finde ich schwer, deshalb mache ich jeden Abend eine kleine Übung.'],
       ['f1', 'Wie lernt man in Ihrem Heimatland in der Schule? Was ist dort anders?'],

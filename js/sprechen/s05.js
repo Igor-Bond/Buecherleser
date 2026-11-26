@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'arbeit', topic: 'Thema: Arbeit und Kollegen',
-    pic: 'Ein Büro. Eine Frau und ein Mann sitzen am Schreibtisch vor Computern. Ein Kollege steht rechts und hält Papiere in der Hand. An der Wand hängen ein Wochenplan und eine Uhr.',
+    scene: 'arbeit', img: 'arbeit.jpg', topic: 'Thema: Arbeit und Kollegen',
+    pic: 'Ein helles Büro. Zwei Frauen sitzen an weißen Schreibtischen und arbeiten an Laptops. Die Frau vorne links trägt eine braune Jacke und schaut auf ihren Laptop. Die Frau hinten liest ein Blatt Papier. Rechts steht ein Mann in einem roten Pullover am Tisch und schaut nach unten. Links ist ein großes Fenster, hinten steht eine Pflanze.',
     ask: ['Wie ist das bei Ihnen: Verstehen Sie sich gut mit Ihren Kollegen?', 'Was ist bei der Arbeit in Ihrem Heimatland anders als in Deutschland?'],
     sample: [
-      ['f1', 'Auf dem Bild sehe ich ein Büro. Eine Frau und ein Mann sitzen am Schreibtisch und arbeiten am Computer. Rechts steht ein Kollege, er hält Papiere in der Hand. An der Wand hängen ein Wochenplan und eine Uhr. Ich glaube, dass der Mann rechts den beiden etwas erklären möchte. Vielleicht sprechen sie gleich über die Arbeit für diese Woche. Das ist ein ganz normaler Arbeitstag, und die Kollegen arbeiten zusammen.'],
+      ['f1', 'Auf dem Bild sehe ich ein helles Büro. Zwei Frauen sitzen an weißen Schreibtischen, beide haben einen Laptop. Die Frau vorne trägt eine braune Jacke und schreibt etwas. Die Frau hinten liest ein Blatt Papier. Rechts steht ein Mann in einem roten Pullover am Tisch. Ich glaube, er sucht etwas, oder er möchte mit seiner Kollegin sprechen. Links ist ein großes Fenster, und hinten steht eine Pflanze. Vielleicht arbeiten die drei in einer kleinen Firma. Alle arbeiten ruhig und konzentriert.'],
       ['m1', 'Wie ist das bei Ihnen: Verstehen Sie sich gut mit Ihren Kollegen?'],
       ['f1', 'Ja, sehr gut. Am Anfang habe ich nicht alles verstanden, aber meine Kolleginnen haben mir viel geholfen und langsam gesprochen. In der Pause trinken wir zusammen Kaffee und reden auch über private Dinge. Das ist mir wichtig, weil ich dann gern zur Arbeit gehe.'],
       ['m1', 'Was ist bei der Arbeit in Ihrem Heimatland anders als in Deutschland?'],

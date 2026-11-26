@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'bus', topic: 'Thema: Unterwegs in der Stadt',
-    pic: 'Eine Bushaltestelle in der Stadt. Ein roter Bus der Linie 12 zum Hauptbahnhof steht an der Haltestelle. Drei Personen warten: ein älterer Mann, eine Frau mit Handy und ein Mann mit Rucksack. Die Sonne scheint.',
+    scene: 'bus', img: 'bus.jpg', topic: 'Thema: Unterwegs in der Stadt',
+    pic: 'Ein Schwarz-Weiß-Foto von einer Haltestelle in einer Stadt. Mehrere Personen warten: Links steht eine Frau mit Rucksack, ein Mann sitzt auf der Bank, in der Mitte steht eine Frau mit einer Tasche und schaut auf ihr Handy. Rechts stehen zwei Männer am Geländer. Viele schauen auf ihr Handy. Im Hintergrund sind Geschäfte und Häuser. Die Sonne scheint.',
     ask: ['Wie fahren Sie zur Arbeit oder zum Kurs?', 'Wie sind die Menschen in Ihrem Heimatland in der Stadt unterwegs?'],
     sample: [
-      ['m1', 'Auf dem Bild sehe ich eine Bushaltestelle in der Stadt. Dort steht ein roter Bus. Es ist die Linie 12, sie fährt zum Hauptbahnhof. An der Haltestelle warten drei Personen: ein älterer Mann, eine Frau mit einem Handy und ein Mann mit einem Rucksack. Die Sonne scheint, das Wetter ist schön. Ich glaube, es ist Morgen und die Leute fahren zur Arbeit. Vielleicht steigen sie gleich in den Bus ein. Das ist eine typische Situation in einer Stadt.'],
+      ['m1', 'Das ist ein Schwarz-Weiß-Foto. Ich sehe eine Haltestelle in einer Stadt. Dort warten mehrere Personen. Links steht eine Frau mit einem Rucksack, und ein Mann sitzt auf der Bank. In der Mitte steht eine Frau mit einer Tasche, sie schaut auf ihr Handy. Rechts stehen zwei Männer am Geländer. Viele Leute schauen auf ihr Handy, niemand spricht mit den anderen. Ich glaube, sie warten auf den Bus oder die Straßenbahn. Vielleicht fahren sie zur Arbeit. Die Sonne scheint, und im Hintergrund sind Geschäfte.'],
       ['f1', 'Wie fahren Sie zur Arbeit oder zum Kurs?'],
       ['m1', 'Ich fahre meistens mit der Straßenbahn, weil es in der Innenstadt kaum Parkplätze gibt. Die Fahrt dauert nur 20 Minuten. Ich habe eine Monatskarte, das ist billiger als das Auto. Abends nach der Arbeit fährt die Bahn aber nur noch selten, dann muss ich manchmal lange warten.'],
       ['f1', 'Wie sind die Menschen in Ihrem Heimatland in der Stadt unterwegs?'],

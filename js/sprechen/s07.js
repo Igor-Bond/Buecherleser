@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'spielplatz', topic: 'Thema: Kinder und Freizeit',
-    pic: 'Ein Spielplatz im Park bei Sonnenschein. Ein Kind sitzt auf der Schaukel, ein anderes steht oben auf der Rutsche. Eine Frau und ein Mann stehen bei einer Bank und schauen zu. Im Sand liegt ein Ball, rechts steht ein Baum.',
+    scene: 'spielplatz', img: 'spielplatz.jpg', topic: 'Thema: Kinder und Freizeit',
+    pic: 'Ein Spielplatz. Ein Mädchen in einer rosa Jacke sitzt oben auf einer Rutsche aus Metall und hebt die Arme. Links steht eine Frau in einer hellen Jacke auf einer kleinen Brücke mit blauem Geländer und schaut dem Mädchen lächelnd zu. Im Hintergrund sind Bäume. Der Himmel ist grau.',
     ask: ['Was machen Sie in Ihrer Freizeit mit Kindern oder mit Ihrer Familie?', 'Wie spielen Kinder in Ihrem Heimatland? Ist das anders als in Deutschland?'],
     sample: [
-      ['f1', 'Auf dem Bild sehe ich einen Spielplatz in einem Park. Die Sonne scheint. Ein Kind sitzt auf der Schaukel, und ein anderes Kind steht oben auf der Rutsche. Bei einer Bank stehen eine Frau und ein Mann und schauen zu. Im Sand liegt ein Ball, und rechts steht ein Baum. Ich glaube, dass die beiden die Eltern der Kinder sind. Vielleicht ist heute Wochenende, und die Familie verbringt den Nachmittag draußen. Alle sehen zufrieden aus.'],
+      ['f1', 'Auf dem Bild sehe ich einen Spielplatz. Ein Mädchen sitzt oben auf der Rutsche. Es trägt eine rosa Jacke und hebt die Arme. Ich glaube, es freut sich und will gleich rutschen. Links steht eine Frau in einer hellen Jacke. Sie steht auf einer kleinen Brücke mit einem blauen Geländer und schaut dem Mädchen zu. Sie lächelt. Wahrscheinlich ist sie die Mutter. Im Hintergrund sind Bäume, und der Himmel ist grau. Vielleicht ist es Frühling, weil beide eine Jacke tragen.'],
       ['m1', 'Was machen Sie in Ihrer Freizeit mit Kindern oder mit Ihrer Familie?'],
       ['f1', 'Wir gehen fast jeden Nachmittag auf den Spielplatz, weil unsere Wohnung klein ist und die Kinder Bewegung brauchen. Im Winter gehen wir ins Schwimmbad oder in die Bibliothek. Mein Sohn spielt außerdem Fußball im Verein, und ich schaue am Samstag bei den Spielen zu.'],
       ['m1', 'Wie spielen Kinder in Ihrem Heimatland? Ist das anders als in Deutschland?'],

@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'umzug', topic: 'Thema: Wohnen und Umziehen',
-    pic: 'Ein Umzug. Vor einem Haus steht ein Umzugswagen. Ein Mann und eine Frau tragen zusammen einen großen Karton mit der Aufschrift Küche. Links vor der Haustür stehen weitere Kartons und eine Pflanze.',
+    scene: 'umzug', img: 'umzug.jpg', topic: 'Thema: Wohnen und Umziehen',
+    pic: 'Eine Frau und ein Mann gehen auf der Straße an einem Haus vorbei. Der Mann trägt zwei große Kartons, auf den Kartons stehen die englischen Wörter für Bücher und Küche. Die Frau trägt eine Holzkiste mit Pflanzen. Beide lächeln. Die Sonne scheint.',
     ask: ['Sind Sie in Deutschland schon einmal umgezogen? Wie war das?', 'Wie wohnen die Menschen in Ihrem Heimatland? Was ist dort anders?'],
     sample: [
-      ['m1', 'Auf dem Bild sehe ich einen Umzug. Vor einem Haus steht ein Umzugswagen. Ein Mann und eine Frau tragen zusammen einen großen Karton, auf dem Karton steht das Wort Küche. Links vor der Haustür stehen noch mehr Kartons und eine Pflanze. Ich glaube, dass die beiden ein Paar sind und gerade in dieses Haus einziehen. Vielleicht haben sie den Wagen nur für einen Tag gemietet und müssen sich beeilen. Ein Umzug ist viel Arbeit, aber sie machen alles zusammen.'],
+      ['m1', 'Auf dem Bild sehe ich eine Frau und einen Mann auf der Straße vor einem Haus. Der Mann trägt zwei große Kartons. Auf den Kartons stehen englische Wörter, sie bedeuten Bücher und Küche. Die Frau trägt eine Kiste aus Holz mit Pflanzen. Beide lächeln und sehen glücklich aus. Ich glaube, die beiden sind ein Paar und ziehen gerade in eine neue Wohnung um. Vielleicht ziehen sie zum ersten Mal zusammen. Die Sonne scheint, das Wetter ist gut für einen Umzug.'],
       ['f1', 'Sind Sie in Deutschland schon einmal umgezogen? Wie war das?'],
       ['m1', 'Ja, einmal. Zuerst habe ich in einem Zimmer bei einer Familie gewohnt, und vor einem Jahr bin ich in meine jetzige Wohnung gezogen. Ich hatte nur zwei Koffer und ein Fahrrad, deshalb war es einfach. Schwer war nur die Wohnungssuche, sie hat fast vier Monate gedauert.'],
       ['f1', 'Wie wohnen die Menschen in Ihrem Heimatland? Was ist dort anders?'],

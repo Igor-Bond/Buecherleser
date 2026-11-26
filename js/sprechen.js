@@ -22,7 +22,7 @@ export const PARTS = {
   t2: {
     title: 'Teil 2 · Über Erfahrungen sprechen', short: 'Teil 2', time: 'около 3 минут: описание и свой опыт',
     instr: 'Sehen Sie sich das Bild an. Erzählen Sie: Was sehen Sie? Was für eine Situation zeigt das Bild? Danach sprechen Sie über Ihre eigenen Erfahrungen.',
-    ru: 'Опишите картинку и ситуацию, затем расскажите о своём опыте и сравните со своей страной. На экзамене это фотография; здесь — рисунок.',
+    ru: 'Опишите картинку и ситуацию, затем расскажите о своём опыте и сравните со своей страной. Сначала опишите, что видно, потом скажите, что это за ситуация.',
     who: { f: 'Kandidatin', m: 'Kandidat', x: ['Prüfer', 'Prüferin'] },
     checks: ['Сказал(а), кто на картинке, где они и что делают', 'Было предположение: ich glaube, vielleicht, wahrscheinlich', 'Рассказал(а) о своём опыте — с примером из жизни',
       'Сравнил(а) со своей страной: bei uns …, in meiner Heimat …', 'Говорил(а) полторы-две минуты без долгих пауз'],
@@ -41,7 +41,7 @@ function taskHtml(set, part) {
   const t = set[part];
   if (part === 't1') return `<div class="board sp-card"><h3>Stichwörter</h3><p>${KEYWORDS.join(' · ')}</p></div>
 <p class="sp-q"><b>Fragen der Prüferin / des Prüfers:</b></p><ul class="sp-list">${t.ask.map(q => `<li>${q}</li>`).join('')}</ul>`;
-  if (part === 't2') return `<div class="img sp-scene">${scene(t.scene)}</div>
+  if (part === 't2') return `<div class="img sp-scene">${t.img ? `<img src="assets/sprechen/${t.img}" alt="Bild zur Aufgabe" width="900" height="600">` : scene(t.scene)}</div>
 <p class="sp-q"><b>${t.topic}</b></p><ul class="sp-list"><li>Was sehen Sie auf dem Bild?</li><li>Was für eine Situation zeigt das Bild?</li></ul>
 <p class="sp-q"><b>Ihre Erfahrungen:</b></p><ul class="sp-list">${t.ask.map(q => `<li>${q}</li>`).join('')}</ul>`;
   return `<div class="board sp-card"><h3>${t.title}</h3><p>${t.task}</p><p>${t.points.map(p => `– ${p}`).join('<br>')}<br>– …</p></div>`;
@@ -94,7 +94,7 @@ function partHtml(set, part, st, ctx) {
 
 function startHtml(set, st, ctx) {
   let h = `<h2>${set.title}</h2><p class="tinfo">${set.about}</p><div class="tbox" lang="ru">`;
-  h += '<p>В наборе три задания, как на экзамене: рассказ о себе, описание картинки с разговором о своём опыте и совместное планирование. На экзамене вы сдаёте вдвоём с другим кандидатом, времени на подготовку нет, всё вместе занимает около 16 минут.</p>';
+  h += '<p>В наборе три задания, как на экзамене: рассказ о себе, описание фотографии с разговором о своём опыте и совместное планирование. На экзамене вы сдаёте вдвоём с другим кандидатом, времени на подготовку нет, всё вместе занимает около 16 минут.</p>';
   h += '<p>Правильного ответа здесь нет, поэтому проверка такая: запишите себя и отметьте по списку, что получилось; сравните с образцом; а если в настройках есть ключ ИИ — получите разбор ошибок по тексту ответа.</p>';
   h += `<p>${ORDER.map(p => `${PARTS[p].short}: <b>${countText(st, p).replace('отмечено ', '')}</b>${st.ai?.[p] ? ' · есть разбор' : ''}`).join(' &nbsp;·&nbsp; ')}</p>`;
   if (Object.keys(st.chk || {}).length || Object.keys(st.txt || {}).length) h += '<p><button data-t="reset">Начать набор заново</button></p>';

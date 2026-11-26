@@ -1,5 +1,5 @@
-// Формат набора Sprechen: t1 — вопросы экзаменатора (ask) и образец; t2 — рисунок (scene из scenes.js), тема, описание рисунка
-// для ИИ (pic), вопросы об опыте (ask) и образец; t3 — ситуация (title, task), пункты (points), имена (who) и образец диалога.
+// Формат набора Sprechen: t1 — вопросы экзаменатора (ask) и образец; t2 — фотография (img из assets/sprechen; scene — запасной
+// рисунок из scenes.js), тема, описание снимка для ИИ (pic), вопросы об опыте (ask) и образец; t3 — ситуация (title, task), пункты (points), имена (who) и образец диалога.
 // sample — реплики [[код, текст], …] как в Hören: код f1/m1 — пол и номер говорящего. В t1 и t2 первым говорит кандидат.
 export default {
   id: 's01', title: 'Set 1', about: 'Vorstellung · Essen in der Familie · Abschiedsfeier für eine Kollegin',
@@ -14,11 +14,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'essen', topic: 'Thema: Essen in der Familie',
-    pic: 'Eine Familie sitzt am Esstisch: eine Frau, ein Mann und zwei Kinder. Auf dem Tisch stehen Teller, Gläser und eine Schüssel mit Essen. Über dem Tisch hängt eine Lampe, links ist ein Fenster.',
+    scene: 'essen', img: 'essen.jpg', topic: 'Thema: Essen in der Familie',
+    pic: 'Eine Familie isst zusammen in der Küche. Am Tisch sitzen eine Frau, ein Junge und ein Mädchen, rechts sieht man einen Mann von hinten. Auf den Tellern sind Spaghetti, in einer Schüssel sind Fleischbällchen mit Tomatensoße. Die Frau und das Mädchen schauen den Mann an, das Mädchen hält eine Gabel in der Hand. Im Hintergrund sind weiße Küchenschränke.',
     ask: ['Wie ist das bei Ihnen: Essen Sie oft zusammen mit Ihrer Familie?', 'Was ist in Ihrem Heimatland beim Essen anders als in Deutschland?'],
     sample: [
-      ['f1', 'Auf dem Bild sehe ich eine Familie. Sie sitzt am Esstisch: eine Frau, ein Mann und zwei Kinder. Auf dem Tisch stehen Teller, Gläser und eine große Schüssel mit Essen. Über dem Tisch hängt eine Lampe, und links ist ein Fenster. Ich glaube, es ist Abend und die Familie isst zusammen zu Abend. Vielleicht erzählen die Kinder gerade, was sie in der Schule gemacht haben. Die Stimmung ist ruhig und gemütlich.'],
+      ['f1', 'Auf dem Bild sehe ich eine Familie in der Küche. Am Tisch sitzen eine Frau, ein Junge und ein Mädchen. Rechts sieht man einen Mann von hinten, ich glaube, das ist der Vater. Alle essen Spaghetti, und auf dem Tisch steht eine Schüssel mit Fleischbällchen und Tomatensoße. Die Frau und das Mädchen schauen den Mann an. Vielleicht erzählt er gerade etwas Interessantes. Der Junge schaut auf seinen Teller. Ich denke, es ist ein normales Essen zu Hause. Die Stimmung ist ruhig.'],
       ['m1', 'Wie ist das bei Ihnen: Essen Sie oft zusammen mit Ihrer Familie?'],
       ['f1', 'Ja, aber nicht jeden Tag. Mittags isst meine Tochter in der Schule, und ich bin im Kurs. Aber am Abend essen wir fast immer zusammen. Das ist mir wichtig, weil wir dann in Ruhe über den Tag sprechen können. Am Sonntag frühstücken wir lange.'],
       ['m1', 'Was ist in Ihrem Heimatland beim Essen anders als in Deutschland?'],

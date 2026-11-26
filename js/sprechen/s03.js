@@ -11,11 +11,11 @@ export default {
     ],
   },
   t2: {
-    scene: 'kasse', topic: 'Thema: Einkaufen',
-    pic: 'Eine Kasse im Supermarkt. Die Kassiererin sitzt an Kasse 2, auf dem Band liegen Lebensmittel. Ein Mann steht an der Kasse, hinter ihm wartet eine Frau mit einem Einkaufswagen. Im Hintergrund sind Regale mit Waren.',
+    scene: 'kasse', img: 'kasse.jpg', topic: 'Thema: Einkaufen',
+    pic: 'An der Kasse im Supermarkt. Eine Frau mit Kopftuch und Jeansjacke und ein Mann mit blauer Mütze stehen an der Kasse. Die Frau hält ein Handy in der Hand und bezahlt, der Mann packt die Einkäufe in eine Papiertüte. Auf dem Band steht eine Ananas. Links am Rand sieht man die Person, die an der Kasse arbeitet.',
     ask: ['Wo und wie oft kaufen Sie Lebensmittel ein?', 'Wie kauft man in Ihrem Heimatland ein? Was ist dort anders?'],
     sample: [
-      ['f1', 'Auf dem Bild sehe ich eine Kasse im Supermarkt. Die Kassiererin sitzt an Kasse 2. Auf dem Band liegen Lebensmittel. Ein Mann steht an der Kasse, ich glaube, er bezahlt gerade. Hinter ihm wartet eine Frau mit einem Einkaufswagen. Im Hintergrund sieht man Regale mit vielen Waren. Vielleicht ist es Samstag, und die Leute kaufen für das Wochenende ein. Das ist eine ganz normale Situation im Alltag.'],
+      ['f1', 'Auf dem Bild sehe ich eine Kasse im Supermarkt. Eine Frau und ein Mann stehen an der Kasse. Die Frau trägt ein Kopftuch und eine Jeansjacke, der Mann hat eine blaue Mütze auf. Die Frau hält ihr Handy in der Hand, ich glaube, sie bezahlt gerade mit dem Handy. Der Mann packt die Einkäufe in eine Papiertüte. Auf dem Band steht noch eine Ananas. Links am Rand sieht man die Person, die an der Kasse arbeitet. Vielleicht sind die beiden ein Paar und kaufen für das Wochenende ein.'],
       ['m1', 'Wo und wie oft kaufen Sie Lebensmittel ein?'],
       ['f1', 'Ich kaufe zweimal in der Woche im Supermarkt ein, meistens nach der Arbeit. Brot muss ich nicht kaufen, weil ich es aus der Bäckerei mitbringe. Obst und Gemüse hole ich gern samstags auf dem Markt, dort ist alles frisch. Vorher schreibe ich immer einen Einkaufszettel.'],
       ['m1', 'Wie kauft man in Ihrem Heimatland ein? Was ist dort anders?'],

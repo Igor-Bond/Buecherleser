@@ -3,6 +3,7 @@
 import { SETS } from '../js/sprechen/index.js';
 import { SCENE_IDS, scene } from '../js/sprechen/scenes.js';
 import { DRILLS } from '../js/sprechen/phrases.js';
+import { existsSync, statSync } from 'node:fs';
 
 // То, что синтезатор речи читает неправильно, а распознавание речи не может сверить
 const TTS_BAD = [[/\d{1,2}[.:]\d{2}\s*Uhr/, 'время пишется «14 Uhr 30»'], [/\d,\d{2}\s*(Euro|€)|€/, 'цена пишется «12 Euro 50»'],
@@ -39,6 +40,7 @@ for (const s of SETS) {
     if (part === 't2') {
       need(SCENE_IDS.includes(t.scene) && scene(t.scene).startsWith('<svg'), `Teil 2: нет рисунка «${t.scene}»`);
       need(!scenes.has(t.scene), `Teil 2: рисунок «${t.scene}» уже занят другим набором`); scenes.add(t.scene);
+      if (t.img) { const f = new URL('../assets/sprechen/' + t.img, import.meta.url); need(existsSync(f), `Teil 2: нет файла assets/sprechen/${t.img}`); if (existsSync(f) && statSync(f).size > 200000) warn.push(`Teil 2: фото ${t.img} больше 200 КБ`); }
       need(typeof t.topic === 'string' && t.topic.startsWith('Thema: '), 'Teil 2: topic должен начинаться с «Thema: »');
       need(typeof t.pic === 'string' && t.pic.length > 60, 'Teil 2: нет описания рисунка pic (его получает ИИ)');
     }
