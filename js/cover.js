@@ -18,9 +18,11 @@ const MOTIF = {
   news: '<rect x="66" y="64" width="68" height="66" rx="3"/><path d="M77 78H123M77 92H98M77 104H98M77 116H98"/><rect x="106" y="92" width="17" height="24"/>',
   watch: '<circle cx="100" cy="102" r="31"/><path d="M100 102V83M100 102l13 8"/><path d="M91 60H109M100 60V71"/>',
   ear: '<path d="M70 106V98a30 30 0 0 1 60 0v8"/><rect x="62" y="104" width="16" height="28" rx="6"/><rect x="122" y="104" width="16" height="28" rx="6"/><path d="M93 112v12M100 106v24M107 112v12"/>',
+  talk: '<path d="M64 70h50a8 8 0 0 1 8 8v24a8 8 0 0 1-8 8H88l-14 12v-12h-10a8 8 0 0 1-8-8V78a8 8 0 0 1 8-8Z"/><path d="M128 92h8a8 8 0 0 1 8 8v20a8 8 0 0 1-8 8h-6v10l-12-10h-18"/><path d="M72 86h34M72 96h22"/>',
   leaf: '<path d="M68 128c0-40 24-64 64-64 0 40-24 64-64 64Z"/><path d="M68 128 114 82"/>',
 };
 const BY_WORD = [
+  [/^sprechen\b/i, 'talk', '#5a3d6b'],
   [/^hören\b.*prüfungsniveau/i, 'ear', '#2c3a5e'],
   [/^hören\b/i, 'ear', '#1f4f5c'],
   [/prüfungstraining/i, 'checks', '#a8501f'],

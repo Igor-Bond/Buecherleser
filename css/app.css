@@ -244,3 +244,40 @@ h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
 #r-content .now:empty { display: none; }
 #r-content .vsel { display: flex; flex-wrap: wrap; gap: .6em 1.2em; }
 #r-content .vsel select { margin-left: .4em; max-width: 14em; }
+/* Sprechen: карточка задания, рисунок, запись, самопроверка, разбор */
+#r-content .ru { font-family: var(--ui); font-size: .85em; line-height: 1.45; text-indent: 0; text-align: left; hyphens: manual; }
+#r-content .rm { text-indent: 0; text-align: left; hyphens: manual; margin-bottom: .55em; break-inside: avoid; }
+#r-content .rm span { display: block; font-family: var(--ui); font-size: .8em; color: var(--muted); }
+#r-content .sp-card h3 { text-align: left; }
+#r-content .sp-scene { margin: 0 0 .8em; break-inside: avoid; }
+#r-content .sp-scene svg { display: block; width: 100%; max-width: 30em; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+#r-content .sp-q { text-indent: 0; text-align: left; margin-bottom: .2em; font-size: .93em; }
+#r-content .sp-list { margin: 0 0 .8em 1.2em; padding: 0; text-align: left; hyphens: manual; font-size: .93em; }
+#r-content .sp { border-top: 1px solid var(--line); padding-top: .9em; margin-top: 1em; }
+#r-content .sp-h { margin-bottom: .45em; }
+#r-content .sp-time { font-weight: 600; margin-left: .2em; }
+#r-content .sp-audio audio { width: 100%; max-width: 26em; height: 40px; }
+#r-content .sp button.on { border-color: #cf3f4f; color: #cf3f4f; }
+#r-content .chks { display: flex; flex-direction: column; gap: .35em; margin-bottom: .9em; }
+#r-content .chk { display: flex; gap: .6em; align-items: baseline; text-align: left; background: var(--card); margin: 0; padding: .45em .7em; line-height: 1.3; }
+#r-content .chk i { font-style: normal; font-weight: 700; color: transparent; border: 1px solid var(--line); border-radius: 4px; width: 1.25em; height: 1.25em; line-height: 1.2em; text-align: center; flex-shrink: 0; }
+#r-content .sp .chk.on { border-color: #2e9a57; color: inherit; background: color-mix(in srgb, #2e9a57 16%, var(--bg)); }
+#r-content .chk.on i { color: #fff; background: #2e9a57; border-color: #2e9a57; }
+#r-content .sp-text { display: block; width: 100%; box-sizing: border-box; font: inherit; font-family: var(--font); font-size: 1.1em; line-height: 1.4; color: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .5em .7em; margin-bottom: .6em; resize: vertical; user-select: text; -webkit-user-select: text; }
+#r-content .sp-ai:empty { display: none; }
+#r-content .sp-ai { border-left: 3px solid var(--accent); padding-left: .8em; margin-bottom: 1em; font-size: 1.05em; }
+#r-content .sp-ai p, #r-content .sp-ai li { text-indent: 0; text-align: left; hyphens: manual; margin-bottom: .4em; }
+#r-content .sp-ai ul { margin: 0 0 .5em 1.1em; padding: 0; }
+#r-content .sp-sample .script { font-family: var(--font); font-size: 1.15em; }
+#r-content .drill { border: 1px solid var(--line); border-radius: 10px; padding: .9em 1em .4em; margin: .6em 0 1em; background: var(--card); break-inside: avoid; }
+#r-content .dr-n { color: var(--muted); margin-bottom: .5em; }
+#r-content .dr-ru { font-size: 1.25em; line-height: 1.35; margin-bottom: .5em; }
+#r-content .dr-de { font-family: var(--font); font-size: 1.45em; line-height: 1.35; font-weight: 600; margin-bottom: .5em; }
+#r-content .dr-de .hit { color: #2e9a57; }
+#r-content .dr-de .miss { color: #cf3f4f; text-decoration: underline wavy; text-underline-offset: 3px; }
+#r-content .dr-res.good { color: #2e9a57; font-weight: 600; }
+#r-content .dr-res.bad { color: #cf3f4f; font-weight: 600; }
+#r-content .dr-res .muted { font-weight: 400; }
+#r-content .drill button.on { border-color: #cf3f4f; color: #cf3f4f; background: none; }
+#r-content .dr-all { margin-bottom: 1em; }
+#r-content .dr-all summary { font-family: var(--ui); font-size: .85em; cursor: pointer; color: var(--muted); margin-bottom: .6em; }

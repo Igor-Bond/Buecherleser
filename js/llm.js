@@ -101,10 +101,10 @@ export async function refreshModels(key) {
 }
 
 // Gemini: потоковый ответ через REST, без SDK
-async function gemini({ key, model, level, kind, text, sentence, onText, signal }) {
+async function gemini({ key, model, level, kind, text, sentence, sys, user, onText, signal }) {
   const body = JSON.stringify({
-    systemInstruction: { parts: [{ text: system(level) }] },
-    contents: [{ role: 'user', parts: [{ text: prompt({ kind, text, sentence }) }] }],
+    systemInstruction: { parts: [{ text: sys ?? system(level) }] },
+    contents: [{ role: 'user', parts: [{ text: user ?? prompt({ kind, text, sentence }) }] }],
   });
   // Сначала выбранная модель, затем остальные: перегрузка (503), лимит (429) и снятая модель (404) — повод попробовать следующую
   const all = await ranked(key, signal);
@@ -156,9 +156,10 @@ async function gemini({ key, model, level, kind, text, sentence, onText, signal 
   return out;
 }
 
-export async function explain({ key, model, level, kind, text, sentence, onText, signal }) {
+// sys и user — свой системный текст и свой запрос вместо разбора слова (так спрашивает раздел Sprechen)
+export async function explain({ key, model, level, kind, text, sentence, sys, user, onText, signal }) {
   model = modelOf(key, model);
-  if (isGoogle(key)) return gemini({ key, model, level, kind, text, sentence, onText, signal });
+  if (isGoogle(key)) return gemini({ key, model, level, kind, text, sentence, sys, user, onText, signal });
   try {
     Anthropic ??= (await import('https://esm.sh/@anthropic-ai/sdk')).default;
   } catch {
@@ -169,9 +170,9 @@ export async function explain({ key, model, level, kind, text, sentence, onText,
     const stream = client.messages.stream({
       model,
       max_tokens: 8000,
-      system: system(level),
+      system: sys ?? system(level),
       output_config: { effort: 'low' },
-      messages: [{ role: 'user', content: prompt({ kind, text, sentence }) }],
+      messages: [{ role: 'user', content: user ?? prompt({ kind, text, sentence }) }],
     }, { signal });
     stream.on('text', onText);
     const msg = await stream.finalMessage();

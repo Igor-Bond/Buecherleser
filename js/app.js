@@ -7,6 +7,8 @@ import { DEMO_FB2 } from './demo.js';
 import { coverSvg } from './cover.js';
 import * as L from './lesen.js';
 import * as Sp from './speak.js';
+import * as V from './voicein.js';
+import * as SPR from './sprechen.js';
 import { TEST_LINES, playsText, nowText, EXAM_PLAYS } from './hoeren.js';
 import * as Y from './sync.js';
 
@@ -197,7 +199,7 @@ async function openBook(id) {
   for (const ch of c.chapters) { pre.push(total); total += ch.len; }
   R = { meta, ch: c.chapters, toc: c.toc || [], notes: c.notes || {}, pre, total, ci: 0, page: 0, pages: 1, W: 0, blocks: [], test };
   // список голосов приходит с задержкой: когда он появился, начальная страница варианта Hören показывает его
-  if (test && L.BOOKS.find(b => b.id === id)?.hoeren && Sp.status() !== 'ok') { const r = R; Sp.ready().then(() => { if (R === r && current === 'reader' && R.ch[R.ci].kind === 'start' && Sp.status() !== 'unknown') showChapter(R.ci); }); }
+  if (test && L.BOOKS.some(b => b.id === id && (b.hoeren || b.sprechen)) && Sp.status() !== 'ok') { const r = R; Sp.ready().then(() => { if (R === r && current === 'reader' && R.ch[R.ci].kind === 'start' && Sp.status() !== 'unknown') showChapter(R.ci); }); }
   $('#r-title').textContent = meta.title;
   show('reader');
   $('#v-reader').classList.remove('bare');
@@ -208,7 +210,7 @@ async function openBook(id) {
 }
 
 function showChapter(i, { block = 0, last = false, frac = 0 } = {}) {
-  Sp.stop();
+  Sp.stop(); V.stopAll();
   R.ci = i;
   let html = R.ch[i].render ? R.ch[i].render() : R.ch[i].html;
   if (!paged()) {
@@ -325,6 +327,7 @@ function makeTest(states) {
     timerVid: () => tTimer?.vid,
     rate: () => S.rate || 1,
     voices: () => voicePrefs,
+    md, hasKey: () => !!S.key, blob: (id, part) => recBlobs.get(id + part) || '',
     save: vid => { if (tTimer?.vid === vid) states[vid].sec = spent(); states[vid].at = Date.now(); persist(); },
   };
 }
@@ -366,7 +369,11 @@ function testClick(e) {
     T.save(ch.vid);
     return true;
   }
-  if (e.target.closest('select, label')) return true;
+  if (e.target.closest('select, label, textarea, audio, summary')) return true;
+  const dr = e.target.closest('[data-dr]');
+  if (dr) { drClick(dr); return true; }
+  const sp = e.target.closest('[data-sp], [data-chk]');
+  if (sp) { spClick(ch.vid, sp); return true; }
   const pl = e.target.closest('[data-play]');
   if (pl) { playText(ch.vid, pl.dataset.play); return true; }
   const act = e.target.closest('[data-t]')?.dataset.t;
@@ -402,6 +409,108 @@ function testClick(e) {
   }
   return true;
 }
+
+// ---------- Sprechen: запись, диктовка, самопроверка, разбор ИИ
+const recBlobs = new Map(); // записи живут, пока открыта страница приложения
+let recTick = 0, spAi = null;
+function spClick(vid, el) {
+  const T = R.test, st = T.st(vid), box = el.closest('.sp'), part = box.dataset.part, set = SPR.setOf(vid);
+  if (el.dataset.chk) {
+    const k = el.dataset.chk;
+    st.chk ||= {};
+    if (st.chk[k]) delete st.chk[k]; else st.chk[k] = true;
+    el.classList.toggle('on', !!st.chk[k]);
+    box.querySelector('.sp-n').textContent = SPR.countText(st, part);
+    return T.save(vid);
+  }
+  const act = el.dataset.sp;
+  if (act === 'sample') {
+    (st.show ||= {})[part] = true; T.save(vid);
+    box.querySelector('.sp-sample').innerHTML = SPR.sampleHtml(set, part);
+    relayout();
+  } else if (act === 'rec') {
+    if (V.busy() === 'rec') return V.stopAll();
+    Sp.stop();
+    const time = box.querySelector('.sp-time'), off = () => { clearInterval(recTick); el.textContent = '● Записать себя'; el.classList.remove('on'); };
+    V.record({
+      onStop: blob => {
+        off();
+        if (!blob) return;
+        const old = recBlobs.get(vid + part); if (old) URL.revokeObjectURL(old);
+        const url = URL.createObjectURL(blob); recBlobs.set(vid + part, url);
+        const p = box.querySelector('.sp-audio');
+        if (p?.isConnected) { p.hidden = false; p.querySelector('audio').src = url; relayout(); }
+      },
+    }).then(() => {
+      const t0 = Date.now();
+      el.textContent = '■ Остановить запись'; el.classList.add('on'); time.textContent = '0:00';
+      clearInterval(recTick); recTick = setInterval(() => { time.textContent = L.clock(Math.round((Date.now() - t0) / 1000)); }, 500);
+    }).catch(err => { off(); toast(err.message, 6000); });
+  } else if (act === 'dict') {
+    if (V.busy() === 'dict') return V.stopAll();
+    Sp.stop();
+    const ta = box.querySelector('.sp-text'), base = ta.value.trim();
+    el.textContent = '■ Закончить диктовку'; el.classList.add('on');
+    V.dictate({
+      onText: t => { ta.value = (base ? base + ' ' : '') + t; },
+      onEnd: err => {
+        el.textContent = '● Продиктовать'; el.classList.remove('on');
+        (st.txt ||= {})[part] = ta.value.trim(); T.save(vid);
+        if (err) toast(err.message, 7000);
+      },
+    });
+  } else if (act === 'ai') spAnalyse(vid, part, box);
+}
+async function spAnalyse(vid, part, box) {
+  const T = R.test, st = T.st(vid), text = box.querySelector('.sp-text').value.trim(), out = box.querySelector('.sp-ai');
+  if (text.split(/\s+/).length < 8) return toast('Сначала продиктуйте или напечатайте ответ — хотя бы пару предложений', 5000);
+  if (!S.key) return toast('Для разбора нужен ключ ИИ: Настройки → ИИ-разбор', 6000);
+  V.stopAll(); spAi?.abort();
+  const ctl = spAi = new AbortController();
+  let acc = '';
+  out.innerHTML = '<p class="muted">Разбираю ответ…</p>';
+  try {
+    const res = await explain({
+      key: S.key, model: S.model, sys: SPR.AI_SYSTEM(S.level), user: SPR.aiPrompt(SPR.setOf(vid), part, text), signal: ctl.signal,
+      onText: d => { acc += d; if (out.isConnected) out.innerHTML = md(acc); },
+    });
+    (st.ai ||= {})[part] = res; (st.txt ||= {})[part] = text; T.save(vid);
+    if (out.isConnected) { out.innerHTML = md(res); relayout(); }
+  } catch (err) {
+    if (ctl.signal.aborted) return;
+    if (out.isConnected) out.innerHTML = st.ai?.[part] ? md(st.ai[part]) : '';
+    toast(err.message, 7000);
+  }
+}
+// Тренажёр фраз: карточка перерисовывается на месте после каждого действия
+function drClick(el) {
+  const id = el.closest('.drill').dataset.drill, T = R.test, st = T.st('sp00'), act = el.dataset.dr;
+  const redraw = () => { const box = content.querySelector(`.drill[data-drill="${id}"]`); if (box) { box.outerHTML = SPR.drillCard(id, st); relayout(); } };
+  if (act === 'hear') return void Sp.speak([['f1', SPR.drillNow(id, st)]], { rate: S.rate || 1 }).then(ok => { if (!ok && Sp.wasSilent()) toast('Голос не начал говорить: проверьте звук и немецкий голос', 6000); });
+  if (act === 'say') {
+    if (V.busy() === 'dict') return V.stopAll();
+    Sp.stop();
+    let heard = '';
+    el.textContent = '■ Слушаю…'; el.classList.add('on');
+    return V.dictate({
+      once: true, onText: t => { heard = t; },
+      onEnd: err => {
+        if (err) { toast(err.message, 7000); return redraw(); }
+        SPR.drillAnswer(id, st, heard); T.save('sp00'); redraw();
+      },
+    });
+  }
+  if (act === 'restart' && !confirm('Сбросить счёт по фразам этого блока?')) return;
+  V.stopAll(); Sp.stop();
+  SPR.drillAct(id, st, act); T.save('sp00'); redraw();
+}
+content.addEventListener('toggle', e => { if (e.target.matches?.('details')) relayout(); }, true);
+// напечатанный ответ сохраняется сам
+content.addEventListener('input', debounce(e => {
+  const ta = e.target.closest?.('.sp-text'), ch = R?.ch[R.ci];
+  if (!ta || !R?.test || !ch) return;
+  (R.test.st(ch.vid).txt ||= {})[ta.closest('.sp').dataset.part] = ta.value.trim(); R.test.save(ch.vid);
+}, 600));
 
 // Hören: прочитать текст группы вслух. Повторное нажатие останавливает; счётчик растёт, когда текст дослушан до конца.
 let playing = null;
@@ -521,7 +630,7 @@ function initReader() {
   const pickShow = () => mark(pick.b ? span(pick.a.range, pick.b.range) : sentenceRange(pick.a));
   const pickMove = (x, y) => { const h = wordAt(x, y); if (!h) return; pick.b = sameRange(h.range, pick.a.range) ? null : h; pickShow(); };
   const pickEnd = () => { const p = pick; pick = null; skipClick = Date.now(); openPhrase(p.b ? span(p.a.range, p.b.range) : sentenceRange(p.a)); };
-  content.addEventListener('selectstart', e => e.preventDefault());
+  content.addEventListener('selectstart', e => { if (!e.target.closest?.('textarea') && e.target.nodeName !== 'TEXTAREA') e.preventDefault(); });
   if (/Android/.test(navigator.userAgent)) content.style.userSelect = 'none'; // в Chromium слово под пальцем находится и так; в Safari не проверено, там хватает selectstart
   view.addEventListener('contextmenu', e => { if (touchy) e.preventDefault(); });
   view.addEventListener('touchstart', e => {
