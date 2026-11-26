@@ -24,21 +24,42 @@ const FEMALE = /katja|hedda|amala|seraphina|elke|gisela|klarissa|louisa|maja|tan
 const MALE = /stefan|conrad|killian|florian|bernd|christoph|kasper|klaus|ralf|jonas|jan\b|yannick|markus|martin|hans|daniel|viktor|eddy|reed|rocko|grandpa|male|männlich/i;
 const sexOf = v => MALE.test(v.name) && !/female/i.test(v.name) ? 'm' : FEMALE.test(v.name) ? 'f' : '';
 
-// Каждому говорящему — свой голос, пока голосов хватает (сначала подходящие по полу, потом любые свободные).
+// Пол голоса по имени узнаётся не всегда (на Android голоса зовутся просто «Deutsch Deutschland»), поэтому женский и мужской
+// голос можно назначить вручную: prefs = { f: id, m: id }. Хранится на устройстве — у каждого устройства свои голоса.
+let prefs = {};
+export const setPrefs = p => { prefs = p || {}; };
+const idOf = v => v.voiceURI || v.name;
+export function voiceList() {
+  const vs = germanVoices(), seen = {};
+  return vs.map(v => {
+    const n = (seen[v.name] = (seen[v.name] || 0) + 1), dup = vs.filter(x => x.name === v.name).length > 1;
+    return { id: idOf(v) + (dup ? '#' + n : ''), name: v.name.replace(/^Microsoft | - German.*$/g, '') + (dup ? ' ' + n : ''), sex: sexOf(v), voice: v };
+  });
+}
+const LOW = 0.6; // тон мужской реплики, когда читать её приходится женским или неизвестным голосом
+
+// Каждому говорящему — свой голос, пока голосов хватает: сначала назначенный вручную, потом подходящий по полу, потом любой свободный.
 // Когда голоса кончились, берётся уже занятый, а различие даёт высота тона.
 function cast(codes) {
   const all = germanVoices().sort((a, b) => (b.localService ? 1 : 0) - (a.localService ? 1 : 0) || (/de[-_]DE/i.test(b.lang) ? 1 : 0) - (/de[-_]DE/i.test(a.lang) ? 1 : 0));
   const free = [...all], roles = {}, perSex = { f: 0, m: 0 };
+  const list = voiceList(), pick = { f: list.find(v => v.id === prefs.f)?.voice, m: list.find(v => v.id === prefs.m)?.voice };
   for (const c of codes) {
     const sex = c[0] === 'm' ? 'm' : 'f', nth = perSex[sex]++;
-    let i = free.findIndex(v => sexOf(v) === sex);
-    if (i < 0) i = free.findIndex(v => !sexOf(v));
+    if (!nth && pick[sex]) {
+      // один и тот же голос назначен обоим — мужчину отличает низкий тон
+      roles[c] = { voice: pick[sex], pitch: sex === 'm' && pick.f === pick.m ? LOW : 1 };
+      const k = free.indexOf(pick[sex]); if (k >= 0) free.splice(k, 1);
+      continue;
+    }
+    let i = free.findIndex(v => sexOf(v) === sex && v !== pick.f && v !== pick.m);
+    if (i < 0) i = free.findIndex(v => !sexOf(v) && v !== pick.f && v !== pick.m);
     if (i >= 0) {
       const v = free.splice(i, 1)[0], known = sexOf(v) === sex;
-      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? 0.8 : 1.15 };
+      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? LOW : 1.1 };
     } else {
-      const same = Object.values(roles).find(r => r.voice && sexOf(r.voice) === sex);
-      roles[c] = { voice: same?.voice || all[0] || null, pitch: clampPitch(sex === 'm' ? 0.75 - 0.15 * nth : 1.2 + 0.2 * nth) };
+      const first = roles[codes.find(x => x[0] === c[0] && roles[x])];
+      roles[c] = { voice: first?.voice || free.shift() || all[0] || null, pitch: clampPitch(sex === 'm' ? (nth ? 0.85 : LOW) : 1.15 + 0.25 * nth) };
     }
   }
   return roles;
@@ -61,7 +82,8 @@ export function stop() {
 }
 
 // lines: [[код, текст], …]; rate — скорость. Возвращает обещание: true — дочитано до конца, false — остановлено или не получилось.
-export function speak(lines, { rate = 1 } = {}) {
+// onLine(код) вызывается, когда слово переходит к другому участнику
+export function speak(lines, { rate = 1, onLine } = {}) {
   stop(); silent = false;
   if (!supported || status() === 'none') return Promise.resolve(false);
   const my = ++run, roles = cast([...new Set(lines.map(l => l[0]))]);
@@ -78,6 +100,7 @@ export function speak(lines, { rate = 1 } = {}) {
       u.lang = 'de-DE'; u.rate = rate; u.pitch = r.pitch || 1;
       if (r.voice) try { u.voice = r.voice; u.lang = r.voice.lang.replace('_', '-'); } catch { /* голос исчез из списка — читаем голосом по умолчанию для de-DE */ }
       u.onstart = () => { started = true; clearTimeout(keep?.guard); };
+      onLine?.(c);
       u.onend = () => { started = true; clearTimeout(keep?.guard); if (my === run) setTimeout(next, queue[i]?.[0] !== c ? 380 : 120); };
       u.onerror = e => { if (my !== run) return; if (e.error === 'interrupted' || e.error === 'canceled') done(false); else next(); };
       keep.u = u; // без ссылки Chrome иногда теряет событие end

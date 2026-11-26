@@ -27,6 +27,7 @@ export function groupHead(p, pi, g, gi, st) {
   const key = `${pi}.${gi}`, n = st.plays?.[key] || 0, isEx = g.ex != null;
   const label = isEx ? 'Beispiel' : `${p.label} ${gi + (p.groups[0].ex != null ? 0 : 1)}`;
   let h = `<div class="hear"><b class="hear-l">${label}</b><button class="play" data-play="${key}">▶ Прослушать</button>`;
+  if (new Set(g.audio.map(l => l[0])).size > 1) h += '<span class="now" lang="ru"></span>';
   h += `<span class="plays${!st.done && n > EXAM_PLAYS ? ' over' : ''}" lang="ru">${playsText(n, st.done)}</span></div>`;
   if (isEx) h += `<p class="ex-sol">Lösung: <b>${'abcdef'[g.ex]}</b></p>`;
   if (st.done) h += scriptHtml(g);
@@ -41,11 +42,22 @@ export function speechBox(ctx) {
   const s = Sp.status(), rate = ctx.rate();
   let h = '<div class="tbox speech" lang="ru"><p><b>Озвучка.</b> ';
   if (s === 'off') return h + 'Этот браузер не умеет озвучивать текст — откройте приложение в Chrome, Edge или Safari.</p></div>';
-  if (s === 'ok') h += `Тексты читает голос устройства, записи диктора нет. Немецких голосов — ${Sp.voicesInfo()}. В разговорах реплики читаются разными голосами, а если голос один — меняется высота тона.`;
+  if (s === 'ok') h += `Тексты читает голос устройства, записи диктора нет. Немецких голосов — ${Sp.voicesInfo()}. В разговорах женские и мужские реплики читаются разными голосами; пока разговор звучит, рядом с кнопкой видно, кто говорит.`;
   else if (s === 'none') h += `<span class="warn">На этом устройстве нет немецкого голоса, поэтому тексты прозвучать не могут.</span> ${ANDROID} ${OTHER}`;
   else h += `Браузер не сообщил список голосов (на Android так бывает). Нажмите «Проверить голос»: должна прозвучать немецкая фраза. Если тишина или читают не по-немецки — ${ANDROID[0].toLowerCase() + ANDROID.slice(1)}`;
   h += `</p><p>Скорость речи: <button data-t="rate-" aria-label="Медленнее">−</button><output class="rate">${rate.toFixed(1).replace('.', ',')}×</output><button data-t="rate+" aria-label="Быстрее">+</button>`;
-  return h + '<button data-t="voice-test">Проверить голос</button></p></div>';
+  h += '<button data-t="voice-test">Проверить голоса</button></p>';
+  const list = Sp.voiceList();
+  if (list.length) {
+    const p = ctx.voices(), mark = { f: ' (жен.)', m: ' (муж.)', '': '' };
+    const sel = sex => `<select data-voice="${sex}"><option value="">авто</option>${list.map(v => `<option value="${v.id.replace(/"/g, '&quot;')}"${p[sex] === v.id ? ' selected' : ''}>${v.name}${mark[v.sex]}</option>`).join('')}</select>`;
+    h += `<p class="vsel"><label>Женский голос ${sel('f')}</label><label>Мужской голос ${sel('m')}</label></p>`;
+    h += list.length > 1 ? '<p class="muted">Если в разговоре мужчина и женщина звучат одинаково — выберите голоса сами и нажмите «Проверить голоса»: сначала говорит женщина, потом мужчина.</p>'
+      : '<p class="muted">Немецкий голос на устройстве один, поэтому мужские реплики читаются им же, но низким тоном. ' + (/Android/i.test(globalThis.navigator?.userAgent || '') ? 'Отдельный мужской голос: настройки телефона → Синтез речи → шестерёнка у синтезатора Google → «Установить голосовые данные» → Deutsch — там несколько голосов; после установки закройте и откройте приложение.' : 'Отдельный мужской голос можно добавить в настройках речи устройства.') + '</p>';
+  }
+  return h + '</div>';
 }
 
-export const TEST_LINES = [['f1', 'Guten Tag! So klingt die deutsche Stimme auf diesem Gerät.'], ['m1', 'Und so klingt die zweite Stimme. Viel Erfolg beim Hören!']];
+export const TEST_LINES = [['f1', 'Guten Tag! So klingt die Frauenstimme auf diesem Gerät.'], ['m1', 'Und so klingt die Männerstimme. Viel Erfolg beim Hören!']];
+// Кто сейчас говорит: подпись рядом с кнопкой, пока разговор звучит
+export const nowText = code => !code ? '' : (code[0] === 'm' ? '♂ говорит мужчина' : '♀ говорит женщина') + (+code.slice(1) > 1 ? ' ' + code.slice(1) : '');

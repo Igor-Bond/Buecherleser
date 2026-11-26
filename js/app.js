@@ -7,7 +7,7 @@ import { DEMO_FB2 } from './demo.js';
 import { coverSvg } from './cover.js';
 import * as L from './lesen.js';
 import * as Sp from './speak.js';
-import { TEST_LINES, playsText, EXAM_PLAYS } from './hoeren.js';
+import { TEST_LINES, playsText, nowText, EXAM_PLAYS } from './hoeren.js';
 import * as Y from './sync.js';
 
 const $ = s => document.querySelector(s);
@@ -324,6 +324,7 @@ function makeTest(states) {
     st: vid => states[vid] ??= { ans: {}, used: 0 },
     timerVid: () => tTimer?.vid,
     rate: () => S.rate || 1,
+    voices: () => voicePrefs,
     save: vid => { if (tTimer?.vid === vid) states[vid].sec = spent(); states[vid].at = Date.now(); persist(); },
   };
 }
@@ -365,6 +366,7 @@ function testClick(e) {
     T.save(ch.vid);
     return true;
   }
+  if (e.target.closest('select, label')) return true;
   const pl = e.target.closest('[data-play]');
   if (pl) { playText(ch.vid, pl.dataset.play); return true; }
   const act = e.target.closest('[data-t]')?.dataset.t;
@@ -403,6 +405,14 @@ function testClick(e) {
 
 // Hören: прочитать текст группы вслух. Повторное нажатие останавливает; счётчик растёт, когда текст дослушан до конца.
 let playing = null;
+// Какой голос считать женским и какой мужским — выбор пользователя; хранится только на этом устройстве (голоса у устройств разные)
+let voicePrefs = {};
+content.addEventListener('change', e => {
+  const sel = e.target.closest('select[data-voice]');
+  if (!sel) return;
+  voicePrefs = { ...voicePrefs, [sel.dataset.voice]: sel.value || undefined };
+  Sp.setPrefs(voicePrefs); DB.put('kv', voicePrefs, 'voices');
+});
 function playText(vid, key) {
   const same = playing === vid + key;
   Sp.stop();
@@ -411,10 +421,11 @@ function playText(vid, key) {
   if (s === 'off') return toast('Этот браузер не умеет озвучивать текст', 5000);
   if (s === 'none') return toast('На устройстве нет немецкого голоса. Как его установить — на первой странице варианта', 7000);
   const btn = () => R?.test && R.ch[R.ci].vid === vid ? content.querySelector(`[data-play="${key}"]`) : null;
-  const paint = on => { const b = btn(); if (b) { b.textContent = on ? '■ Остановить' : '▶ Прослушать'; b.classList.toggle('on', on); } };
+  const now = code => { const el = btn()?.parentElement.querySelector('.now'); if (el) el.textContent = nowText(code); };
+  const paint = on => { const b = btn(); if (b) { b.textContent = on ? '■ Остановить' : '▶ Прослушать'; b.classList.toggle('on', on); } if (!on) now(''); };
   const T = R.test;
   playing = vid + key; paint(true);
-  Sp.speak(L.audioOf(vid, key), { rate: S.rate || 1 }).then(ok => {
+  Sp.speak(L.audioOf(vid, key), { rate: S.rate || 1, onLine: now }).then(ok => {
     paint(false);
     if (playing === vid + key) playing = null;
     if (!ok && Sp.wasSilent()) toast('Голос не начал говорить. Проверьте звук и немецкий голос — подсказка на первой странице варианта', 7000);
@@ -978,6 +989,7 @@ async function start() {
   const s = await DB.get('kv', 'settings');
   S = { ...DEF, ...s, look: { ...DEF.look, ...s?.look } };
   userFonts = (await DB.get('kv', 'fonts')) || [];
+  voicePrefs = (await DB.get('kv', 'voices')) || {}; Sp.setPrefs(voicePrefs);
   for (const f of userFonts) addFont(f).catch(() => {});
   applyLook(false);
   initLook(); initLibrary(); initReader(); initSheet(); initVocab(); initDicts(); initSettings(); initCloud(); initInstall();
