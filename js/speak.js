@@ -36,7 +36,10 @@ export function voiceList() {
     return { id: idOf(v) + (dup ? '#' + n : ''), name: v.name.replace(/^Microsoft | - German.*$/g, '') + (dup ? ' ' + n : ''), sex: sexOf(v), voice: v };
   });
 }
-const LOW = 0.82; // сильнее опускать нельзя: голос Android на тоне 0.6 звучит глухо и неразборчиво
+// Чем ниже тон, тем заметнее разница с женской репликой, но тем глуше звук (на Android 0.6 уже неразборчиво) — поэтому значение
+// настраивается на устройстве: prefs.low, от 0.5 до 1.
+export const LOW_DEFAULT = 0.82;
+const low = () => Math.min(1, Math.max(0.5, +prefs.low || LOW_DEFAULT));
 // тон мужской реплики, когда читать её приходится женским или неизвестным голосом
 
 // Каждому говорящему — свой голос, пока голосов хватает: сначала назначенный вручную, потом подходящий по полу, потом любой свободный.
@@ -49,7 +52,7 @@ function cast(codes) {
     const sex = c[0] === 'm' ? 'm' : 'f', nth = perSex[sex]++;
     if (!nth && pick[sex]) {
       // один и тот же голос назначен обоим — мужчину отличает низкий тон
-      roles[c] = { voice: pick[sex], pitch: sex === 'm' && pick.f === pick.m ? LOW : 1 };
+      roles[c] = { voice: pick[sex], pitch: sex === 'm' && pick.f === pick.m ? low() : 1 };
       const k = free.indexOf(pick[sex]); if (k >= 0) free.splice(k, 1);
       continue;
     }
@@ -57,10 +60,10 @@ function cast(codes) {
     if (i < 0) i = free.findIndex(v => !sexOf(v) && v !== pick.f && v !== pick.m);
     if (i >= 0) {
       const v = free.splice(i, 1)[0], known = sexOf(v) === sex;
-      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? LOW : 1 };
+      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? low() : 1 };
     } else {
       const first = roles[codes.find(x => x[0] === c[0] && roles[x])];
-      roles[c] = { voice: first?.voice || free.shift() || all[0] || null, pitch: clampPitch(sex === 'm' ? LOW - 0.1 * nth : 1.12 + 0.12 * nth) };
+      roles[c] = { voice: first?.voice || free.shift() || all[0] || null, pitch: clampPitch(sex === 'm' ? low() - 0.1 * nth : 1.12 + 0.12 * nth) };
     }
   }
   return roles;
