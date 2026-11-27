@@ -1,8 +1,9 @@
 // Проверка книги Sprechen B1 на формат: node tools/check-sprechen.mjs
-// Наборы заданий (js/sprechen/sNN.js), рисунки для Teil 2 и фразы голосового тренажёра.
+// Наборы заданий (js/sprechen/sNN.js), рисунки для Teil 2, фразы голосового тренажёра и его расписание повторений.
 import { SETS } from '../js/sprechen/index.js';
 import { SCENE_IDS, scene } from '../js/sprechen/scenes.js';
-import { DRILLS } from '../js/sprechen/phrases.js';
+import { DRILLS, PROFILE } from '../js/sprechen/phrases.js';
+import * as TR from '../js/trainer.js';
 import { existsSync, statSync } from 'node:fs';
 
 // То, что синтезатор речи читает неправильно, а распознавание речи не может сверить
@@ -58,24 +59,86 @@ for (const s of SETS) {
   if (err.length) bad++;
 }
 
-// Тренажёр фраз: полные предложения без цифр и пропусков, иначе распознавание не сможет сверить их слово в слово
+// Тренажёр фраз: формат фраз, принятые формулировки и расписание повторений
 const seen = new Set(), dIds = new Set();
-let phrases = 0;
+let phrases = 0, variants = 0;
 for (const d of DRILLS) {
-  const err = [];
+  const err = [], keys = new Set();
   if (!/^d\d$/.test(d.id) || dIds.has(d.id)) err.push('id блока должен быть вида d3 и не повторяться'); dIds.add(d.id);
   if (!d.title || !d.ru || !Array.isArray(d.items) || d.items.length < 5) err.push('нужны title, ru и не меньше пяти фраз');
-  for (const [de, ru] of d.items || []) {
+  for (const it of d.items || []) {
     phrases++;
-    if (typeof de !== 'string' || typeof ru !== 'string' || !ru.trim()) { err.push('фраза без перевода'); continue; }
-    if (/\d|…|\.\.\.|[\/()]/.test(de)) err.push(`цифры, пропуск или варианты через черту: «${de}»`);
-    if (!/[.!?]$/.test(de)) err.push(`нет точки в конце: «${de}»`);
-    if (count(de) > 16) err.push(`слишком длинная для одной реплики (${count(de)} слов): «${de}»`);
-    if (seen.has(de)) err.push(`повтор: «${de}»`); seen.add(de);
+    const at = `«${it.k}»`;
+    if (!/^[a-z]+$/.test(it.k || '') || keys.has(it.k)) { err.push(`ключ фразы — строчные латинские буквы, без повторов: ${at}`); continue; } keys.add(it.k);
+    if (typeof it.de !== 'string' || typeof it.ru !== 'string' || !it.ru.trim()) { err.push(`${at}: нужны de и ru`); continue; }
+    for (const t of [it.de, ...(it.ok || [])]) {
+      if (/\d|…|\.\.\.|[\/()]/.test(t)) err.push(`${at}: цифры, пропуск или скобки: «${t}»`);
+      if (!/[.!?]$/.test(t)) err.push(`${at}: нет точки в конце: «${t}»`);
+    }
+    if (/[\[\]|]/.test(it.de)) err.push(`${at}: в образце de не должно быть вариантов в скобках`);
+    if (it.q != null && (typeof it.q !== 'string' || !/[.!?]$/.test(it.q))) err.push(`${at}: реплика q должна быть предложением`);
+    const p = TR.phrase(`${d.id}.${it.k}`);
+    variants += p.accept.length;
+    if (p.accept.length > 80) err.push(`${at}: слишком много сочетаний (${p.accept.length})`);
+    for (const v of p.accept) {
+      if (/[\[\]{}|]/.test(v)) err.push(`${at}: не раскрылись скобки: «${v}»`);
+      if (/\s[,.?!]|,,|\s\s/.test(v)) err.push(`${at}: лишний пробел или запятая: «${v}»`);
+      if (!TR.judge(p, v).ok) err.push(`${at}: формулировка не засчитывается сама себе: «${v}»`);
+    }
+    if (count(p.de) > 16) err.push(`${at}: слишком длинная для одной реплики (${count(p.de)} слов)`);
+    if (TR.judge(p, 'Guten Tag').ok || TR.judge(p, '').ok) err.push(`${at}: засчитывается посторонняя фраза`);
+    if (!/tr-gap/.test(TR.gapText(p.de))) err.push(`${at}: в тексте с пропусками нет пропусков`);
+    if (seen.has(p.de)) err.push(`повтор: «${p.de}»`); seen.add(p.de);
   }
   console.log(`${err.length ? 'ОШИБКА' : 'ok    '} ${d.id} — ${d.title}: фраз ${d.items?.length}`);
   for (const e of err) console.log('   ✗ ' + e);
   if (err.length) bad++;
 }
-console.log(bad ? `Ошибок: ${bad}` : `Всё в порядке: наборов ${SETS.length}, фраз в тренажёре ${phrases}`);
+// «Мои данные»: любая страна и любые варианты из списков дают фразы без дыр
+{
+  const err = [];
+  for (const l of [...PROFILE.lands.map(x => ({ land: x[0] })), { land: 'other', aus: 'Serbien', inl: 'in Serbien' }, { land: 'other' }, { land: 'ua', hobby: 5, kinder: 'ein Kind', seit: 'seit einem Jahr' }])
+    for (const it of DRILLS[0].items) { const p = TR.phrase('d1.' + it.k, l); if (p.accept.some(v => /[{}\[\]]|undefined/.test(v))) err.push(`${l.land}: «${p.de}»`); }
+  const one = TR.phrase('d1.familie', { kinder: 'ein Kind' }), yr = TR.phrase('d1.herkunft', { seit: 'seit einem Jahr' });
+  if (!TR.judge(one, 'ich bin verheiratet und habe 1 Kind').ok) err.push('«1 Kind» должно засчитываться как «ein Kind»');
+  if (!TR.judge(yr, 'ich komme aus der Ukraine und lebe seit 1 Jahr in Deutschland').ok) err.push('«seit 1 Jahr» должно засчитываться');
+  if (!TR.judge(TR.phrase('d1.herkunft'), 'Ich komme aus der Ukraine und wohne seit 2 Jahren in Deutschland').ok) err.push('«seit 2 Jahren» и wohne должны засчитываться');
+  if (TR.judge(TR.phrase('d5.nicht'), 'Am Sonntag kann ich leider nicht').ok) err.push('Sonntag вместо Samstag не должно засчитываться');
+  if (!TR.judge(TR.phrase('d4.samstag'), 'wir könnten am Samstag feiern').ok) err.push('другая формулировка предложения должна засчитываться');
+  console.log(`${err.length ? 'ОШИБКА' : 'ok    '} Мои данные и сверка`);
+  for (const e of err) console.log('   ✗ ' + e);
+  if (err.length) bad++;
+}
+// Расписание: новая фраза проходит все ступени за один заход и приходит завтра; дальше интервалы растут, ошибка их сокращает
+{
+  const err = [], st = {}, day = 1000, need = (ok, msg) => { if (!ok) err.push(msg); };
+  let s = TR.startSession(st, day), guard = 0;
+  need(s && s.queue.length === TR.NEW_PER, `первый заход — ${TR.NEW_PER} новых фраз`);
+  const first = s.queue[0], steps = TR.phrase(first).steps.length;
+  while (s.queue.length && guard++ < 500) TR.answer(s, st, true);
+  need(s.done === TR.NEW_PER && guard === TR.NEW_PER * steps, `каждая фраза должна пройти ${steps} ступени: ответов ${guard}`);
+  need(st.tr[first].b === 1 && st.tr[first].due === day + 1, 'пройденная фраза приходит на повторение завтра');
+  need(!TR.plan(st, day).rev.length && TR.plan(st, day + 1).due === TR.NEW_PER, 'завтра к повторению — все вчерашние');
+  s = TR.startSession(st, day + 1); TR.answer(s, st, true);
+  need(st.tr[first].b === 2 && st.tr[first].due === day + 1 + 3, 'после первого повторения — через три дня');
+  s = TR.startSession(st, day + 4, 'd1');
+  need(s.queue.includes(first) && s.queue[0] !== first && s.rev.has(first), 'к повторению идут все просроченные, самые давние — первыми');
+  s.queue = [first, ...s.queue.filter(k => k !== first)];
+  TR.answer(s, st, false);
+  need(st.tr[first].b === 1 && st.tr[first].s === steps - 2 && s.queue.indexOf(first) === Math.min(2, s.queue.length - 1), 'ошибка на повторении: ящик и ступень назад, фраза возвращается через две карточки');
+  while (s.queue.length && guard++ < 1000) TR.answer(s, st, true);
+  need(st.tr[first].due === day + 5, 'исправленная фраза приходит завтра');
+  const all = {}; for (const x of TR.ALL) all[x.key] = { s: 3, b: 5, due: day + 30 };
+  const free = TR.startSession({ tr: all }, day, 'd2');
+  need(free?.free && free.queue.length === DRILLS[1].items.length, 'когда в блоке всё пройдено — свободное повторение');
+  const before = JSON.stringify(all); TR.answer(free, { tr: all }, false); TR.answer(free, { tr: all }, true);
+  need(JSON.stringify(all) === before, 'свободное повторение не меняет расписание');
+  need(TR.startSession({}, day, 'zz') === null, 'пустой блок — нет захода');
+  for (const view of [TR.homeView(st, day, { canDictate: true }), TR.meView(), TR.cardView(TR.current(TR.startSession(st, day + 9), st), { phase: 'ask' }, TR.startSession(st, day + 9), { canDictate: true })])
+    need(view.body.length > 50 && typeof view.bar === 'string', 'экран не собрался');
+  console.log(`${err.length ? 'ОШИБКА' : 'ok    '} Расписание повторений`);
+  for (const e of err) console.log('   ✗ ' + e);
+  if (err.length) bad++;
+}
+console.log(bad ? `Ошибок: ${bad}` : `Всё в порядке: наборов ${SETS.length}, фраз в тренажёре ${phrases}, принятых формулировок ${variants}`);
 process.exit(bad ? 1 : 0);

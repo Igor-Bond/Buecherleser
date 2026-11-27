@@ -32,20 +32,24 @@ export async function record({ onStop, maxSec = 300 }) {
 
 // Диктовка: onText(текст целиком) при каждом новом куске, onEnd(ошибка | null) в конце.
 // На Android распознавание само замолкает после паузы — пока диктовку не остановили, оно запускается заново, и текст копится.
-// once: одна фраза — после первой паузы распознавание заканчивается само (так работает тренажёр фраз).
-export function dictate({ onText, onEnd, once = false }) {
+// wait — сколько миллисекунд ждать первых слов, silence — сколько тишины после слов считается концом ответа (0 — ждать кнопку «стоп»).
+// Так работает тренажёр фраз: можно подумать и сказать с паузой — запись не оборвётся на первом же вдохе.
+export function dictate({ onText, onEnd, wait = 0, silence = 0 }) {
   stopAll();
   const android = /Android/i.test(navigator.userAgent);
-  let done = '', on = true, fail = null, r;
-  const me = { kind: 'dict', stop: () => { on = false; try { r.stop(); } catch { /* уже остановлено */ } } };
+  let done = '', on = true, fail = null, r, timer = 0;
+  const me = { kind: 'dict', stop: () => { on = false; clearTimeout(timer); try { r.stop(); } catch { /* уже остановлено */ } } };
+  const arm = ms => { clearTimeout(timer); if (ms && on) timer = setTimeout(() => { if (active === me) stopAll(); }, ms); };
   const start = () => {
     r = new (Rec())();
-    r.lang = 'de-DE'; r.interimResults = true; r.continuous = !android && !once;
+    r.lang = 'de-DE'; r.interimResults = true; r.continuous = !android;
     let fin = '';
     r.onresult = e => {
       let interim = ''; fin = '';
       for (const res of e.results) (res.isFinal ? (fin += res[0].transcript.trim() + ' ') : (interim += res[0].transcript));
-      onText((done + fin + interim).replace(/\s+/g, ' ').trim());
+      const text = (done + fin + interim).replace(/\s+/g, ' ').trim();
+      if (text) arm(silence);
+      onText(text);
     };
     r.onerror = e => {
       if (e.error === 'no-speech' || e.error === 'aborted') return;
@@ -56,12 +60,14 @@ export function dictate({ onText, onEnd, once = false }) {
     };
     r.onend = () => {
       done = (done + fin).replace(/\s+/g, ' '); fin = '';
-      if (on && !once && active === me) { try { start(); return; } catch { /* не запустилось — заканчиваем */ } }
+      if (on && active === me) { try { start(); return; } catch { /* не запустилось — заканчиваем */ } }
+      clearTimeout(timer);
       if (active === me) active = null;
       onEnd(fail);
     };
     r.start();
   };
   active = me;
-  try { start(); } catch { active = null; onEnd(new Error('Распознавание речи не запустилось')); }
+  arm(wait);
+  try { start(); } catch { clearTimeout(timer); active = null; onEnd(new Error('Распознавание речи не запустилось')); }
 }

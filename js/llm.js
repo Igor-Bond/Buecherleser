@@ -47,7 +47,10 @@ function prompt({ kind, text, sentence }) {
 
 // Как в wordschatz: спрашиваем у Google, какие модели доступны именно этому ключу, и ставим вперёд свежие flash-модели.
 // Список живёт до перезагрузки страницы; занятые модели запоминаем на пару минут, чтобы не стучаться в них снова.
-const G = { key: '', ranked: null, good: '', busy: new Map() };
+const G = { key: '', ranked: null, good: '', busy: new Map(), think: new Map() };
+// fast: просим модель не «обдумывать» ответ подолгу — у flash-моделей это главная задержка перед первым словом.
+// У разных поколений Gemini настройка называется по-разному, поэтому пробуем по очереди; не принята (400) — следующая, последняя — без настройки.
+const THINK = [{ thinkingConfig: { thinkingLevel: 'low' } }, { thinkingConfig: { thinkingBudget: 0 } }, null];
 const SKIP = /embedding|aqa|vision|image|imagen|tts|audio|veo|live|omni|genie|robotics|computer|gemma|learnlm/i;
 function rank(name) {
   if (!/^gemini/i.test(name) || SKIP.test(name)) return -1;
@@ -101,11 +104,11 @@ export async function refreshModels(key) {
 }
 
 // Gemini: потоковый ответ через REST, без SDK
-async function gemini({ key, model, level, kind, text, sentence, sys, user, onText, signal }) {
-  const body = JSON.stringify({
+async function gemini({ key, model, level, kind, text, sentence, sys, user, fast, onText, signal }) {
+  const base = {
     systemInstruction: { parts: [{ text: sys ?? system(level) }] },
     contents: [{ role: 'user', parts: [{ text: user ?? prompt({ kind, text, sentence }) }] }],
-  });
+  };
   // Сначала выбранная модель, затем остальные: перегрузка (503), лимит (429) и снятая модель (404) — повод попробовать следующую
   const all = await ranked(key, signal);
   const now = Date.now();
@@ -114,18 +117,23 @@ async function gemini({ key, model, level, kind, text, sentence, sys, user, onTe
   queue = (free.length ? free : queue).slice(0, 6);
   let r, last = 0, msg = '';
   for (const m of queue) {
-    try {
-      r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`, {
-        method: 'POST', signal, body,
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      });
-    } catch (err) {
-      if (signal?.aborted) throw err;
-      throw new Error('Не удалось связаться с Google. Проверьте интернет.');
+    for (let vi = fast ? G.think.get(m) ?? 0 : THINK.length - 1; ; vi++) {
+      const body = JSON.stringify(THINK[vi] ? { ...base, generationConfig: THINK[vi] } : base);
+      try {
+        r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:streamGenerateContent?alt=sse`, {
+          method: 'POST', signal, body,
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        });
+      } catch (err) {
+        if (signal?.aborted) throw err;
+        throw new Error('Не удалось связаться с Google. Проверьте интернет.');
+      }
+      if (r.ok) { if (fast) G.think.set(m, vi); break; }
+      last = r.status;
+      msg = (await r.json().catch(() => null))?.error?.message || '';
+      if (!(last === 400 && THINK[vi] && !/API key/i.test(msg))) break; // настройку не приняли — пробуем следующую
     }
     if (r.ok) { G.good = m; break; }
-    last = r.status;
-    msg = (await r.json().catch(() => null))?.error?.message || '';
     if (![404, 429, 500, 503].includes(last)) break;
     G.busy.set(m, Date.now() + 120000);
     if (G.good === m) G.good = '';
@@ -156,10 +164,10 @@ async function gemini({ key, model, level, kind, text, sentence, sys, user, onTe
   return out;
 }
 
-// sys и user — свой системный текст и свой запрос вместо разбора слова (так спрашивает раздел Sprechen)
-export async function explain({ key, model, level, kind, text, sentence, sys, user, onText, signal }) {
+// sys и user — свой системный текст и свой запрос вместо разбора слова (так спрашивает раздел Sprechen); fast — отвечать без долгого обдумывания
+export async function explain({ key, model, level, kind, text, sentence, sys, user, fast, onText, signal }) {
   model = modelOf(key, model);
-  if (isGoogle(key)) return gemini({ key, model, level, kind, text, sentence, sys, user, onText, signal });
+  if (isGoogle(key)) return gemini({ key, model, level, kind, text, sentence, sys, user, fast, onText, signal });
   try {
     Anthropic ??= (await import('https://esm.sh/@anthropic-ai/sdk')).default;
   } catch {

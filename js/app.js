@@ -9,6 +9,7 @@ import * as L from './lesen.js';
 import * as Sp from './speak.js';
 import * as V from './voicein.js';
 import * as SPR from './sprechen.js';
+import * as TR from './trainer.js';
 import { TEST_LINES, playsText, nowText, EXAM_PLAYS } from './hoeren.js';
 import * as Y from './sync.js';
 
@@ -119,16 +120,22 @@ async function addFont(f) { document.fonts.add(await new FontFace(f.name, f.buf)
 
 let current = 'library';
 function show(name, push = true) {
+  const from = current;
   if (current === 'reader' && name !== 'reader') { savePos.flush?.(); closeSheet(); closePanels(); Sp.stop(); }
+  if (current === 'trainer' && name !== 'trainer') { V.stopAll(); Sp.stop(); }
   current = name;
   for (const v of $$('.view')) v.hidden = v.id !== 'v-' + name;
   if (push) history.pushState({ v: name }, '');
   ({ library: renderLibrary, vocab: renderVocab, dicts: renderDicts, settings: renderSettings })[name]?.();
+  // из тренажёра обратно в книгу: страница-вход показывает свежий счёт
+  if (name === 'reader' && from === 'trainer' && R) { const p = R.page; showChapter(R.ci); goPage(p, false); }
 }
 addEventListener('popstate', e => {
   if (!$('#sheet').hidden) closeSheet();
   closePanels();
-  show(e.state?.v || 'library', false);
+  const v = e.state?.v || 'library';
+  if (v === 'trainer') return R?.test ? trOpen(false) : show('library', false); // «вперёд» по истории: тренажёр открывается только из книги
+  show(v, false);
 });
 document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) show(b.dataset.go); });
 
@@ -427,7 +434,7 @@ function spClick(vid, el) {
   if (act === 'sample') {
     (st.show ||= {})[part] = true; T.save(vid);
     box.querySelector('.sp-sample').innerHTML = SPR.sampleHtml(set, part);
-    relayout();
+    reflow();
   } else if (act === 'rec') {
     if (V.busy() === 'rec') return V.stopAll();
     Sp.stop();
@@ -439,7 +446,7 @@ function spClick(vid, el) {
         const old = recBlobs.get(vid + part); if (old) URL.revokeObjectURL(old);
         const url = URL.createObjectURL(blob); recBlobs.set(vid + part, url);
         const p = box.querySelector('.sp-audio');
-        if (p?.isConnected) { p.hidden = false; p.querySelector('audio').src = url; relayout(); }
+        if (p?.isConnected) { p.querySelector('audio').src = url; p.classList.add('has'); }
       },
     }).then(() => {
       const t0 = Date.now();
@@ -471,40 +478,135 @@ async function spAnalyse(vid, part, box) {
   out.innerHTML = '<p class="muted">Разбираю ответ…</p>';
   try {
     const res = await explain({
-      key: S.key, model: S.model, sys: SPR.AI_SYSTEM(S.level), user: SPR.aiPrompt(SPR.setOf(vid), part, text), signal: ctl.signal,
-      onText: d => { acc += d; if (out.isConnected) out.innerHTML = md(acc); },
+      key: S.key, model: S.model, sys: SPR.AI_SYSTEM(S.level), user: SPR.aiPrompt(SPR.setOf(vid), part, text), signal: ctl.signal, fast: true,
+      onText: d => { acc += d; if (out.isConnected) { out.innerHTML = md(acc); reflowSoon(); } },
     });
     (st.ai ||= {})[part] = res; (st.txt ||= {})[part] = text; T.save(vid);
-    if (out.isConnected) { out.innerHTML = md(res); relayout(); }
+    if (out.isConnected) { out.innerHTML = md(res); reflow(); }
   } catch (err) {
     if (ctl.signal.aborted) return;
     if (out.isConnected) out.innerHTML = st.ai?.[part] ? md(st.ai[part]) : '';
     toast(err.message, 7000);
   }
 }
-// Тренажёр фраз: карточка перерисовывается на месте после каждого действия
-function drClick(el) {
-  const id = el.closest('.drill').dataset.drill, T = R.test, st = T.st('sp00'), act = el.dataset.dr;
-  const redraw = () => { const box = content.querySelector(`.drill[data-drill="${id}"]`); if (box) { box.outerHTML = SPR.drillCard(id, st); relayout(); } };
-  if (act === 'hear') return void Sp.speak([['f1', SPR.drillNow(id, st)]], { rate: S.rate || 1 }).then(ok => { if (!ok && Sp.wasSilent()) toast('Голос не начал говорить: проверьте звук и немецкий голос', 6000); });
-  if (act === 'say') {
-    if (V.busy() === 'dict') return V.stopAll();
-    Sp.stop();
-    let heard = '';
-    el.textContent = '■ Слушаю…'; el.classList.add('on');
-    return V.dictate({
-      once: true, onText: t => { heard = t; },
-      onEnd: err => {
-        if (err) { toast(err.message, 7000); return redraw(); }
-        SPR.drillAnswer(id, st, heard); T.save('sp00'); redraw();
-      },
-    });
-  }
-  if (act === 'restart' && !confirm('Сбросить счёт по фразам этого блока?')) return;
-  V.stopAll(); Sp.stop();
-  SPR.drillAct(id, st, act); T.save('sp00'); redraw();
+// ---------- Тренажёр фраз: отдельный экран. Кнопки стоят в нижней полосе, карточка прокручивается сама —
+// высота карточки меняется, но листание книги от неё не зависит (на странице книги карточка прыгала между страницами).
+const trBody = $('#tr-body'), trBar = $('#tr-bar');
+let X = null; // { scr: 'home' | 'card' | 'done' | 'me', sess, cur, ui: { phase, res, live, prev } }
+const trEnv = () => ({ canDictate: V.canDictate, st: trSt() });
+const trSt = () => R.test.st('sp00');
+function trSave() { const st = trSt(); delete st.dr; R.test.save('sp00'); } // st.dr — счёт прежнего тренажёра, он больше не нужен
+function trDraw(keep = false) {
+  const st = trSt(), day = TR.today();
+  if (X.scr === 'card') { X.cur = TR.current(X.sess, st, st.me); if (!X.cur) X.scr = 'done'; }
+  const v = X.scr === 'card' ? TR.cardView(X.cur, X.ui, X.sess, trEnv()) : X.scr === 'done' ? TR.doneView(X.sess, st, day) : X.scr === 'me' ? TR.meView(st.me) : TR.homeView(st, day, trEnv());
+  const top = trBody.scrollTop;
+  trBody.innerHTML = v.body; trBar.innerHTML = v.bar; $('#tr-pos').textContent = v.pos;
+  trBody.scrollTop = keep ? top : 0;
+  $('#v-trainer').dataset.scr = X.scr;
 }
-content.addEventListener('toggle', e => { if (e.target.matches?.('details')) relayout(); }, true);
+function trOpen(push = true) {
+  X = { scr: 'home' };
+  show('trainer', push); trDraw();
+}
+// Голос: фразу читает один голос, реплику собеседника — другой. Молчание при автозапуске не считается ошибкой.
+function trSpeak(lines, byUser) {
+  V.stopAll();
+  if (Sp.status() === 'none' || Sp.status() === 'off') { if (byUser) toast('На устройстве нет немецкого голоса. Как его установить — на первой странице любого набора', 7000); return; }
+  Sp.speak(lines, { rate: S.rate || 1 }).then(ok => { if (!ok && byUser && Sp.wasSilent()) toast('Голос не начал говорить: проверьте звук и немецкий голос', 6000); });
+}
+function trCard() {
+  Sp.stop(); V.stopAll();
+  X.scr = 'card'; X.ui = { phase: 'ask' };
+  trDraw();
+  if (X.scr !== 'card') return;
+  const { p, step } = X.cur;
+  if (step === 'rep') trSpeak([['f1', p.de]]); else if (step === 'talk') trSpeak([['m1', p.q]]);
+}
+// Микрофон слушает, пока не нажали «Готово», не наступила тишина после слов или фраза не совпала с одной из принятых
+function trListen() {
+  const p = X.cur.p, prev = X.ui.phase === 'res' ? X.ui.res : null; // prev — это повтор после ошибки: в счёт он не идёт
+  let heard = '', hit = 0;
+  Sp.stop();
+  X.ui = { phase: 'listen', live: '', prev };
+  trDraw(true);
+  V.dictate({
+    wait: 12000, silence: 3500,
+    onText: t => {
+      heard = t;
+      const out = trBody.querySelector('.tr-live'); if (out) out.textContent = t || '…';
+      if (!hit && TR.judge(p, t).ok) hit = setTimeout(() => { if (V.busy() === 'dict') V.stopAll(); }, 700);
+    },
+    onEnd: err => {
+      clearTimeout(hit);
+      if (current !== 'trainer' || X.scr !== 'card' || X.cur?.p.key !== p.key || X.ui.phase !== 'listen') return;
+      if (err) toast(err.message, 7000);
+      const r = TR.judge(p, heard);
+      X.ui = { phase: 'res', res: prev ? { ...prev, heard: r.heard || prev.heard, text: r.heard ? r.text : prev.text, marks: r.heard ? r.marks : prev.marks, retry: r.ok } : r };
+      trDraw();
+      if (!r.ok && !prev) trSpeak([['f1', p.de]]);
+    },
+  });
+}
+function trNext(ok) {
+  TR.answer(X.sess, trSt(), ok); trSave();
+  trCard();
+}
+function trClick(el) {
+  const act = el.dataset.tr, st = trSt(), day = TR.today();
+  if (act === 'start' || act === 'block' || act === 'more') {
+    const s = TR.startSession(st, day, act === 'block' ? el.dataset.id : act === 'more' ? X.sess.block || undefined : undefined);
+    if (!s) return toast('Здесь пока нечего повторять');
+    X.sess = s; trCard();
+  } else if (act === 'home' || act === 'me') { V.stopAll(); Sp.stop(); X.scr = act; trDraw(); }
+  else if (act === 'reset') {
+    if (!confirm('Стереть расписание и ступени всех фраз? «Мои данные» останутся.')) return;
+    delete st.tr; trSave(); trDraw();
+  } else if (act === 'say') trListen();
+  else if (act === 'stop') V.stopAll();
+  else if (act === 'hear') trSpeak([['f1', X.cur.p.de]], true);
+  else if (act === 'skip') {
+    const p = X.cur.p;
+    X.ui = { phase: 'res', res: { ok: false, heard: '', text: p.de, marks: [], skip: true, ask: !V.canDictate } };
+    trDraw(); trSpeak([['f1', p.de]]);
+  } else if (act === 'yes') { if (X.ui.res.ask) trNext(true); else { Object.assign(X.ui.res, { ok: true, self: true }); trDraw(true); } }
+  else if (act === 'no') trNext(false);
+  else if (act === 'next') trNext(X.ui.res.ok);
+}
+$('#v-trainer').addEventListener('click', e => { const b = e.target.closest('[data-tr]'); if (b && X) trClick(b); });
+$('#tr-back').onclick = () => {
+  if (X && X.scr !== 'home') { V.stopAll(); Sp.stop(); X.scr = 'home'; return trDraw(); }
+  history.length > 1 ? history.back() : show('reader');
+};
+// «Мои данные»: поле сохраняется сразу, список фраз под формой обновляется на месте
+const trMe = e => {
+  const el = e.target.closest?.('[data-me]');
+  if (!el || !X || X.scr !== 'me') return;
+  const st = trSt(), k = el.dataset.me, me = st.me = { ...TR.PROFILE.def, ...(st.me || {}) };
+  me[k] = k === 'hobby' ? +el.value : el.value;
+  if (k === 'land') {
+    const lang = TR.PROFILE.lands.find(l => l[0] === el.value)?.[5];
+    const d = TR.PROFILE.def, auto = [d.weitere, 'ein bisschen Englisch'];
+    if (lang) { me.sprache = lang; if (auto.includes(me.weitere)) me.weitere = auto[lang === 'Russisch' ? 1 : 0]; } // «Russisch, außerdem Russisch» не предлагать
+    trSave(); return trDraw(true);
+  }
+  trBody.querySelector('.tr-prev').innerHTML = TR.mePreview(me);
+  trSave();
+};
+trBody.addEventListener('change', trMe);
+trBody.addEventListener('input', debounce(trMe, 400));
+function drClick(el) { if (el.dataset.dr === 'open') trOpen(); }
+
+// Страница изменилась на месте (открыли образец, пришёл разбор, появилась запись): блоки пересчитываются, страница остаётся та же.
+// relayout() для этого не годится — он ищет страницу по списку блоков, а часть их уже заменена.
+function reflow() {
+  if (!R || current !== 'reader') return;
+  R.blocks = [...content.querySelectorAll('p, h2, h3, h4, .gap, .img, .q, .ad')];
+  if (!paged()) return update();
+  measure(); goPage(R.page, false);
+}
+const reflowSoon = debounce(reflow, 250);
+content.addEventListener('toggle', e => { if (e.target.matches?.('details')) reflow(); }, true);
 // напечатанный ответ сохраняется сам
 content.addEventListener('input', debounce(e => {
   const ta = e.target.closest?.('.sp-text'), ch = R?.ch[R.ci];

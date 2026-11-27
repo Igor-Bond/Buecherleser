@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "buecherleser", "runtimeExecutable": "node", "runtimeArgs": ["serve.mjs"], "port": 5173 }
+    { "name": "buecherleser", "runtimeExecutable": "node", "runtimeArgs": ["serve.mjs"], "port": 5173 },
+    { "name": "buecherleser-5174", "runtimeExecutable": "node", "runtimeArgs": ["serve.mjs", "5174"], "port": 5174 }
   ]
 }

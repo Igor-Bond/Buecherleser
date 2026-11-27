@@ -5,7 +5,7 @@ import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
-const port = Number(process.env.PORT) || 5173;
+const port = Number(process.env.PORT || process.argv[2]) || 5173; // порт можно задать и аргументом: node serve.mjs 5174
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
   '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.txt': 'text/plain', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
 
