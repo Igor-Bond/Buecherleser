@@ -246,11 +246,3 @@ export function meView(me) {
   h += `<h2>Ваши фразы</h2><div class="tr-prev">${mePreview(me)}</div>`;
   return { body: h, bar: btn('home', 'Готово', 'primary wide'), pos: '' };
 }
-
-// Страница в книге: сводка и вход в тренажёр. Она не меняется, пока открыта, — листание страниц от неё не зависит.
-export function bookPage(st, day) {
-  const S = stats(st, day), P = plan(st, day);
-  return `<h2>Phrasentrainer</h2><p lang="ru" class="ru">Тренажёр готовых фраз для всех трёх частей. Фраза проходит ступени: повторить за голосом, сказать по тексту с пропусками, сказать по памяти и ответить ею в разговоре. Выученное возвращается на повторение через 1, 3, 7, 14 и 30 дней.</p>
-<div class="tbox" lang="ru"><p><b>${P.keys.length ? `Сегодня: ${phr(P.keys.length)}` : 'На сегодня всё повторено'}</b>${P.due ? ` — из них на повторение ${P.due}` : ''}. Пройдено ${S.known} из ${S.total}.</p>
-<p><button class="primary" data-dr="open">Открыть тренажёр</button></p><p class="muted">Тренажёр открывается отдельным экраном. Распознаванию речи нужен интернет.</p></div>`;
-}

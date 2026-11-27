@@ -3,7 +3,6 @@
 import { LESEN_B1, LESEN_B1_2, LESEN_B1_3 } from './tests/index.js';
 import { HOEREN_B1, HOEREN_B1_2 } from './hoeren/index.js';
 import * as H from './hoeren.js';
-import * as SPR from './sprechen.js';
 
 // Ответы всех вариантов всех книг лежат в одном хранилище, поэтому id вариантов не повторяются (v01–v20, v21–v28, v31–v38, h01–h08, h11–h18).
 // b1 и a2 — сколько верных ответов примерно соответствует уровню (на экзамене чтение и аудирование оцениваются вместе: 33 и 20 из 45).
@@ -16,19 +15,19 @@ export const BOOKS = [
     hoeren: true, minutes: HOEREN_B1.minutes, total: 20, b1: 15, a2: 9 },
   { id: 'hoeren-b1-2', title: 'Hören B1 — Prüfungsniveau', label: 'Prüfungsniveau', note: 'Формат DTZ · сложнее: тексты длиннее, ответы другими словами', variants: HOEREN_B1_2.variants,
     hoeren: true, minutes: HOEREN_B1_2.minutes, total: 20, b1: 15, a2: 9 },
-  // Sprechen: «варианты» — наборы заданий s01…, у них нет ключа и итога, свои главы строит js/sprechen.js
-  { id: 'sprechen-b1', title: 'Sprechen B1 — Sprechtraining', label: 'Sprechtraining', note: 'Формат DTZ · запись, самопроверка, разбор ИИ', variants: SPR.SETS, sprechen: true },
+  // Sprechen — отдельное приложение (папка sprechen/): в библиотеке от него только плитка, которая его открывает
+  { id: 'sprechen-b1', title: 'Sprechen B1 — Sprechtraining', label: 'Sprechtraining', note: 'Отдельное приложение · фразы, задания, Prüfung', variants: [], app: 'sprechen/' },
 ];
 export const bookMeta = b => ({
   id: b.id, test: true, title: b.title, label: b.label,
-  author: `${b.note} · ${b.sprechen ? 'наборов' : 'вариантов'}: ${b.variants.length}`, added: Date.now(), progress: 0,
+  author: b.app ? b.note : `${b.note} · вариантов: ${b.variants.length}`, added: Date.now(), progress: 0,
 });
 
 const LET = 'abcdefghi';
 export const itemsOf = v => v.parts.flatMap(p => p.groups.flatMap(g => g.items));
 export const variant = id => BOOKS.flatMap(b => b.variants).find(v => v.id === id);
 export const bookOf = vid => BOOKS.find(b => b.variants.some(v => v.id === vid));
-export const audioOf = (vid, key) => key.startsWith('sp.') ? SPR.audioOf(SPR.setOf(vid), key) : H.audioOf(variant(vid), key);
+export const audioOf = (vid, key) => H.audioOf(variant(vid), key);
 
 // В первой книге (v01–v20) ответ «x — ничего не подходит» всегда стоял в задании 10. Здесь он меняется местами с другим
 // заданием Teil 2 — у каждого варианта со своим (иногда остаётся на 10). Если ответы на 6–10 уже даны при старом порядке,
@@ -116,7 +115,6 @@ function resultHtml(v, st, B) {
 export function build(ctx, bookId) {
   const chapters = [], toc = [];
   const B = BOOKS.find(b => b.id === bookId) || BOOKS[0];
-  if (B.sprechen) return SPR.build({ ...ctx, speechBox: () => H.speechBox(ctx) });
   for (const v of B.variants) {
     const st = () => ctx.st(v.id);
     toc.push({ title: v.title, depth: 0, ch: chapters.length });

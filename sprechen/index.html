@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4ecd8">
+<title>Sprechen B1 — устная часть DTZ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- Один экран: середина прокручивается, кнопки всегда внизу. Что в нём показано, решает app.js -->
+<main id="v-sprechen" class="view">
+  <header class="top"><button id="sx-back" aria-label="Назад" hidden>‹</button><h1 id="sx-title" lang="de">Sprechen B1</h1><span id="sx-pos"></span></header>
+  <div id="sx-body" class="page"></div>
+  <footer id="sx-bar" hidden></footer>
+</main>
+<div id="toast" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

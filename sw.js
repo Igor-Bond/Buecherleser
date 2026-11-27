@@ -2,7 +2,7 @@
 // На igor-bond.github.io по одному адресу живут несколько приложений, и хранилище кешей у них общее:
 // стирать можно только свои старые кеши, иначе соседи останутся без офлайна.
 const PREFIX = 'buecherleser-';
-const CACHE = PREFIX + 'v30';
+const CACHE = PREFIX + 'v31';
 const SHELL = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/db.js', 'js/dict.js', 'js/german.js', 'js/fb2.js', 'js/epub.js',
   'js/llm.js', 'js/cover.js', 'js/demo.js', 'js/sync.js', 'js/firebase.config.js', 'js/lesen.js', 'js/hoeren.js', 'js/speak.js', 'js/tests-lesen-b1.js', 'js/tests/index.js',
   'js/tests/v03.js', 'js/tests/v04.js', 'js/tests/v05.js', 'js/tests/v06.js', 'js/tests/v07.js', 'js/tests/v08.js', 'js/tests/v09.js', 'js/tests/v10.js', 'js/tests/v11.js', 'js/tests/v12.js', 'js/tests/v13.js', 'js/tests/v14.js', 'js/tests/v15.js', 'js/tests/v16.js', 'js/tests/v17.js', 'js/tests/v18.js', 'js/tests/v19.js', 'js/tests/v20.js',
@@ -10,8 +10,6 @@ const SHELL = ['./', 'index.html', 'css/app.css', 'js/app.js', 'js/db.js', 'js/d
   'js/tests/v31.js', 'js/tests/v32.js', 'js/tests/v33.js', 'js/tests/v34.js', 'js/tests/v35.js', 'js/tests/v36.js', 'js/tests/v37.js', 'js/tests/v38.js',
   'js/hoeren/fmt.js', 'js/hoeren/index.js', 'js/hoeren/h01.js', 'js/hoeren/h02.js', 'js/hoeren/h03.js', 'js/hoeren/h04.js', 'js/hoeren/h05.js', 'js/hoeren/h06.js', 'js/hoeren/h07.js', 'js/hoeren/h08.js',
   'js/hoeren/h11.js', 'js/hoeren/h12.js', 'js/hoeren/h13.js', 'js/hoeren/h14.js', 'js/hoeren/h15.js', 'js/hoeren/h16.js', 'js/hoeren/h17.js', 'js/hoeren/h18.js',
-  'js/sprechen.js', 'js/trainer.js', 'js/voicein.js', 'js/sprechen/index.js', 'js/sprechen/scenes.js', 'js/sprechen/phrases.js', 'js/sprechen/s01.js', 'js/sprechen/s02.js', 'js/sprechen/s03.js', 'js/sprechen/s04.js', 'js/sprechen/s05.js', 'js/sprechen/s06.js', 'js/sprechen/s07.js', 'js/sprechen/s08.js',
-  'assets/sprechen/essen.jpg', 'assets/sprechen/arzt.jpg', 'assets/sprechen/kasse.jpg', 'assets/sprechen/bus.jpg', 'assets/sprechen/arbeit.jpg', 'assets/sprechen/kurs.jpg', 'assets/sprechen/spielplatz.jpg', 'assets/sprechen/umzug.jpg',
   'books/strom-verstehen.fb2', 'books/der-neue-kollege.fb2', 'books/hausnummer-12.fb2', 'books/kleine-geschichten.fb2',
   'data/base-de-ru.txt', 'manifest.webmanifest', 'icon.svg', 'assets/icon-192.png', 'assets/icon-512.png'];
 
