@@ -1,9 +1,8 @@
-// Офлайн-режим приложения Sprechen B1: сначала сеть (обновления приходят сразу), при её отсутствии — кеш.
-// Имя кеша своё: кеши с началом «buecherleser-» стирает sw.js соседнего Bücherleser.
+// Офлайн-режим: сначала сеть (обновления приходят сразу), при её отсутствии — кеш.
 const PREFIX = 'sprechen-b1-';
-const CACHE = PREFIX + 'v2';
-// Список собирает и сверяет tools/check-precache.mjs: свои файлы и общие с Bücherleser модули из ../js
-const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', '../js/db.js', '../js/speak.js', '../js/voicein.js', '../js/llm.js', '../js/hoeren.js', '../js/sprechen.js', '../js/trainer.js', '../js/sprechen/index.js', '../js/sprechen/phrases.js', '../js/sprechen/s01.js', '../js/sprechen/s02.js', '../js/sprechen/s03.js', '../js/sprechen/s04.js', '../js/sprechen/s05.js', '../js/sprechen/s06.js', '../js/sprechen/s07.js', '../js/sprechen/s08.js', '../js/sprechen/scenes.js', '../assets/sprechen/arbeit.jpg', '../assets/sprechen/arzt.jpg', '../assets/sprechen/bus.jpg', '../assets/sprechen/essen.jpg', '../assets/sprechen/kasse.jpg', '../assets/sprechen/kurs.jpg', '../assets/sprechen/spielplatz.jpg', '../assets/sprechen/umzug.jpg'];
+const CACHE = PREFIX + 'v3';
+// Список сверяет tools/check-precache.mjs: в нём должны быть все файлы приложения
+const SHELL = ['./', 'app.css', 'app.js', 'assets/arbeit.jpg', 'assets/arzt.jpg', 'assets/bus.jpg', 'assets/essen.jpg', 'assets/kasse.jpg', 'assets/kurs.jpg', 'assets/spielplatz.jpg', 'assets/umzug.jpg', 'icon-192.png', 'icon-512.png', 'icon.svg', 'index.html', 'js/data/index.js', 'js/data/phrases.js', 'js/data/s01.js', 'js/data/s02.js', 'js/data/s03.js', 'js/data/s04.js', 'js/data/s05.js', 'js/data/s06.js', 'js/data/s07.js', 'js/data/s08.js', 'js/data/scenes.js', 'js/db.js', 'js/llm.js', 'js/speak.js', 'js/trainer.js', 'js/views.js', 'js/voice.js', 'js/voicein.js', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(

@@ -1,9 +1,9 @@
-// Приложение «Sprechen B1»: тренировка устной части DTZ. Здесь разметка экранов (показывает их sprechen/app.js):
-// главный экран, тренажёр фраз (js/trainer.js), задания по наборам, прогон экзамена, справочник фраз и настройки.
+// Приложение «Sprechen B1»: тренировка устной части DTZ. Здесь разметка экранов (показывает их app.js):
+// главный экран, тренажёр фраз (trainer.js), задания по наборам, прогон экзамена, справочник фраз и настройки.
 // Ключа с ответами здесь нет, поэтому проверка другая: запись и самопроверка по списку, образец ответа, а при наличии ключа ИИ — разбор текста.
 // Каждая функция …View возвращает { title, body, bar, pos }: заголовок, середину экрана, нижние кнопки и надпись справа в шапке.
-import { SETS, REDEMITTEL } from './sprechen/index.js';
-import { scene } from './sprechen/scenes.js';
+import { SETS, REDEMITTEL } from './data/index.js';
+import { scene } from './data/scenes.js';
 import * as TR from './trainer.js';
 import * as V from './voicein.js';
 
@@ -13,7 +13,7 @@ export const audioOf = (set, key) => set?.[key.split('.')[1]]?.sample; // клю
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const clock = sec => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 
-const PHOTOS = new URL('../assets/sprechen/', import.meta.url).href; // адрес считается от этого файла, а не от страницы приложения
+const PHOTOS = new URL('../assets/', import.meta.url).href; // адрес считается от этого файла, а не от страницы приложения
 const KEYWORDS = ['Name', 'Geburtsort', 'Wohnort', 'Arbeit / Beruf', 'Familie', 'Sprachen'];
 export const PARTS = {
   t1: {
@@ -90,7 +90,7 @@ export function hubView(ctx) {
   h += item('data-sx="go" data-scr="exsel"', 'Prüfung', 'Три части подряд, как на экзамене: вопросы задаёт голос, идёт время, ответы превращаются в текст.', exams ? `пройдено наборов: ${exams} из ${SETS.length}` : 'ещё не проходили');
   h += item('data-sx="go" data-scr="ref"', 'Redemittel und Ablauf', 'Как проходит экзамен и готовые фразы для каждой части.', 'справочник');
   h += item('data-sx="go" data-scr="voice"', 'Einstellungen', 'Голос и скорость речи, проверка звука, ключ ИИ для разбора ответов.', ctx.hasKey() ? 'ключ ИИ задан' : 'ключ ИИ не задан');
-  h += '</div><p class="sx-foot"><a href="../">Bücherleser — книги, Lesen и Hören</a></p>';
+  h += '</div>';
   const bar = P.keys.length ? `<button class="primary wide" data-sx="go" data-scr="home">Фразы на сегодня · ${P.keys.length}</button>` : '';
   return { title: 'Sprechen B1', body: h, bar, pos: '' };
 }
@@ -160,12 +160,12 @@ export function talkView(set, tk) {
   if (tk.phase === 'listen') h += `<p class="sx-b u live" lang="de"><b>Вы</b><span class="tr-live">${esc(tk.live || '…')}</span></p>`;
   if (tk.phase === 'think') h += `<p class="sx-b p wait"><b>${P.name}</b>думает…</p>`;
   h += `</div><p class="tr-hint">${{ idle: tk.log.length ? (tk.err ? 'Партнёр не ответил. Попробуйте ещё раз.' : 'Нажмите «Говорить» и продолжайте разговор.') : `Ваш партнёр — ${P.name}. Начните разговор сами или пусть начнёт он. Пройдите по всем пунктам и в конце подведите итог.`,
-    listen: 'Говорите. Закончили реплику — нажмите «Готово» или помолчите три секунды.', think: '', speak: 'Слушайте партнёра…' }[tk.phase]}</p>`;
+    listen: 'Говорите. Закончили реплику — нажмите «Готово» или помолчите три секунды.', think: '', speak: tk.log.length ? 'Слушайте партнёра…' : `Слушайте задание. Потом начните разговор: ваш партнёр — ${P.name}.` }[tk.phase]}</p>`;
   let bar;
   if (tk.phase === 'listen') bar = '<button data-sx="tkstop" class="primary wide on">■ Готово</button>';
   else if (tk.phase === 'idle') bar = (tk.err ? '<button data-sx="tkretry" class="primary wide">Ответ партнёра ещё раз</button>' : '<button data-sx="tksay" class="primary wide">● Говорить</button>')
-    + (tk.log.length ? '' : '<button data-sx="tkfirst">Пусть начнёт партнёр</button>') + (turns ? '<button data-sx="tkend">Закончить разговор</button>' : '');
-  else bar = `<button class="primary wide" disabled>${tk.phase === 'think' ? 'Партнёр думает…' : 'Партнёр говорит…'}</button>${turns ? '<button data-sx="tkend">Закончить разговор</button>' : ''}`;
+    + (tk.log.length ? '' : '<button data-sx="tkfirst">Пусть начнёт партнёр</button>') + (turns || tk.exam ? `<button data-sx="tkend">${tk.exam ? 'Закончить прогон' : 'Закончить разговор'}</button>` : '');
+  else bar = `<button class="primary wide" disabled>${tk.phase === 'think' ? 'Партнёр думает…' : tk.log.length ? 'Партнёр говорит…' : 'Экзаменатор говорит…'}</button>${turns || tk.exam ? `<button data-sx="tkend">${tk.exam ? 'Закончить прогон' : 'Закончить разговор'}</button>` : ''}`;
   return { title: `${set.title} · Teil 3`, body: h, bar, pos: turns ? `реплик: ${turns}` : '' };
 }
 
@@ -178,7 +178,7 @@ const INTRO = {
 // шаги прогона: [часть, реплика экзаменатора]
 export const examSteps = set => [['t1', INTRO.t1], ...set.t1.ask.map(q => ['t1', q]), ['t2', INTRO.t2], ...set.t2.ask.map(q => ['t2', q]), ['t3', INTRO.t3]];
 export function exselView(ctx) {
-  let h = `<p class="muted">Прогон как на экзамене: три части подряд, без подготовки и без образца перед глазами. Вопрос задаёт голос, вы отвечаете и нажимаете «Weiter». ${V.canDictate ? 'Ответы распознаются и после прогона попадают в задания набора — там их можно разобрать с ИИ.' : 'Распознавание речи в этом браузере недоступно: прогон идёт по времени, без текста ответов.'} На экзамене устная часть длится около 16 минут на двоих; одному хватит 8–10 минут.</p><div class="tr-blocks">`;
+  let h = `<p class="muted">Прогон как на экзамене: три части подряд, без подготовки и без образца перед глазами. Вопрос задаёт голос, вы отвечаете и нажимаете «Weiter». ${V.canDictate ? 'Ответы распознаются и после прогона попадают в задания набора — там их можно разобрать с ИИ.' : 'Распознавание речи в этом браузере недоступно: прогон идёт по времени, без текста ответов.'} ${ctx.hasKey() && V.canDictate ? 'В третьей части вам отвечает партнёр-ИИ.' : 'Третья часть идёт без партнёра: для него нужны ключ ИИ и распознавание речи.'} На экзамене устная часть длится около 16 минут на двоих; одному хватит 8–10 минут.</p><div class="tr-blocks">`;
   for (const set of SETS) {
     const e = ctx.st(set.id).exam;
     h += `<button class="tr-block" data-sx="exam" data-set="${set.id}"><b lang="de">${set.title}</b><span lang="de">${esc(set.about)}</span><span class="tr-st">${e ? `пройден ${dateRu(e.at)} · ${clock(e.sec)}` : 'ещё не проходили'}</span></button>`;
@@ -203,14 +203,17 @@ export function exdoneView(set, ctx) {
   return { title: `Prüfung · ${set.title}`, body: h + '</div>', bar: '<button class="primary wide" data-sx="hub">К разделу</button>', pos: '' };
 }
 
+export const THEMES = [['sepia', 'Сепия'], ['light', 'Светлая'], ['dark', 'Тёмная'], ['auto', 'Как в системе']];
 export const refView = () => ({ title: 'Redemittel', body: `<div class="sx-ref" lang="de">${REDEMITTEL.map(r => r.html).join('')}</div>`, bar: '', pos: '' });
-// ctx.set: { key, level } — ключ и уровень общие с Bücherleser
+// ctx.set: { key, level, theme }
 export function voiceView(ctx) {
   const set = ctx.set();
   let h = `<div class="sx-voice">${ctx.speechBox()}</div><h2>Разбор ответов ИИ</h2><div class="tr-form">`;
   h += `<label>Ключ Google Gemini (бесплатный) или Claude<input data-set="key" type="password" autocomplete="off" placeholder="AIza…" value="${esc(set.key)}"></label>`;
   h += `<label>Ваш уровень немецкого<select data-set="level">${['A1', 'A2', 'B1', 'B2', 'C1'].map(l => `<option${l === set.level ? ' selected' : ''}>${l}</option>`).join('')}</select></label></div>`;
-  h += '<p class="muted">Ключ хранится только на этом устройстве и общий с Bücherleser: если он задан там, здесь он уже есть. Бесплатный ключ: aistudio.google.com/app/apikey → «Create API key». Прогресс тоже общий — в другие устройства он уходит через синхронизацию Bücherleser.</p>';
+  h += '<p class="muted">Ключ нужен для разбора ответов и для партнёра-ИИ. Он хранится только на этом устройстве. Бесплатный ключ: aistudio.google.com/app/apikey → «Create API key».</p>';
+  h += `<h2>Оформление</h2><div class="tr-form"><label>Тема<select data-set="theme">${THEMES.map(([id, name]) => `<option value="${id}"${id === set.theme ? ' selected' : ''}>${name}</option>`).join('')}</select></label></div>`;
+  h += '<p class="muted">Прогресс и настройки хранятся только на этом устройстве.</p>';
   return { title: 'Einstellungen', body: h, bar: '', pos: '' };
 }
 

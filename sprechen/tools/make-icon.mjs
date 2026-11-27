@@ -1,5 +1,5 @@
-// Рисует значок приложения Sprechen B1: sprechen/icon.svg и PNG 192 и 512 — без сторонних библиотек.
-// node tools/make-sprechen-icon.mjs
+// Рисует значок приложения: icon.svg и PNG 192 и 512 — без сторонних библиотек.
+// node tools/make-icon.mjs
 // Рисунок (два «облачка» разговора) держится в середине квадрата, чтобы пережить круглую обрезку значка на Android.
 import { writeFileSync } from 'node:fs';
 import { deflateSync, crc32 } from 'node:zlib';
@@ -49,7 +49,7 @@ function png(n) {
 }
 
 const hex = c => '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
-const dir = new URL('../sprechen/', import.meta.url);
+const dir = new URL('../', import.meta.url);
 writeFileSync(new URL('icon.svg', dir), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <rect width="512" height="512" fill="${hex(BG)}"/>
 <rect x="226" y="226" width="184" height="130" rx="28" fill="${hex(DIM)}"/><path d="M330 350h56v50z" fill="${hex(DIM)}"/>

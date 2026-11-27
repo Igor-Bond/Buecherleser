@@ -1,8 +1,8 @@
-// Проверка книги Sprechen B1 на формат: node tools/check-sprechen.mjs
-// Наборы заданий (js/sprechen/sNN.js), рисунки для Teil 2, фразы голосового тренажёра и его расписание повторений.
-import { SETS } from '../js/sprechen/index.js';
-import { SCENE_IDS, scene } from '../js/sprechen/scenes.js';
-import { DRILLS, PROFILE } from '../js/sprechen/phrases.js';
+// Проверка содержания на формат: node tools/check.mjs
+// Наборы заданий (js/data/sNN.js), рисунки для Teil 2, фразы голосового тренажёра и его расписание повторений.
+import { SETS } from '../js/data/index.js';
+import { SCENE_IDS, scene } from '../js/data/scenes.js';
+import { DRILLS, PROFILE } from '../js/data/phrases.js';
 import * as TR from '../js/trainer.js';
 import { existsSync, statSync } from 'node:fs';
 
@@ -41,7 +41,7 @@ for (const s of SETS) {
     if (part === 't2') {
       need(SCENE_IDS.includes(t.scene) && scene(t.scene).startsWith('<svg'), `Teil 2: нет рисунка «${t.scene}»`);
       need(!scenes.has(t.scene), `Teil 2: рисунок «${t.scene}» уже занят другим набором`); scenes.add(t.scene);
-      if (t.img) { const f = new URL('../assets/sprechen/' + t.img, import.meta.url); need(existsSync(f), `Teil 2: нет файла assets/sprechen/${t.img}`); if (existsSync(f) && statSync(f).size > 200000) warn.push(`Teil 2: фото ${t.img} больше 200 КБ`); }
+      if (t.img) { const f = new URL('../assets/' + t.img, import.meta.url); need(existsSync(f), `Teil 2: нет файла assets/${t.img}`); if (existsSync(f) && statSync(f).size > 200000) warn.push(`Teil 2: фото ${t.img} больше 200 КБ`); }
       need(typeof t.topic === 'string' && t.topic.startsWith('Thema: '), 'Teil 2: topic должен начинаться с «Thema: »');
       need(typeof t.pic === 'string' && t.pic.length > 60, 'Teil 2: нет описания рисунка pic (его получает ИИ)');
     }

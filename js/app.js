@@ -188,8 +188,6 @@ const paged = () => S.look.mode === 'paged';
 let bareT = 0;
 $('#v-reader').addEventListener('pointerdown', () => clearTimeout(bareT), true);
 async function openBook(id) {
-  const ext = L.BOOKS.find(b => b.id === id)?.app; // Sprechen B1 — отдельное приложение на том же сайте
-  if (ext) { location.href = ext; return; }
   const meta = await DB.get('books', id);
   stopTimer();
   const test = meta?.test ? makeTest((await DB.get('kv', 'lesen')) || {}) : null;
@@ -320,7 +318,7 @@ const savePos = (() => {
 
 let tTimer = null;
 function makeTest(states) {
-  // Запись общая с приложением Sprechen B1 (оно может быть открыто рядом): читаем её заново и меняем только то, что у нас новее
+  // Приложение может быть открыто в двух вкладках: читаем запись заново и меняем только то, что у нас новее
   const persist = debounce(async () => {
     const cur = (await DB.get('kv', 'lesen')) || {};
     for (const [k, v] of Object.entries(states)) if (!cur[k] || (v.at || 0) >= (cur[k].at || 0)) cur[k] = v; else states[k] = cur[k];
@@ -1017,6 +1015,8 @@ async function start() {
     const old = await DB.get('books', b.id);
     await DB.put('books', { ...L.bookMeta(b), ...(old && { added: old.added, opened: old.opened, pos: old.pos, progress: old.progress }) });
   }
+  // встроенные книги с заданиями, которых больше нет в списке (Sprechen стал отдельным приложением), из библиотеки убираются
+  for (const b of await DB.all('books')) if (b.test && !L.BOOKS.some(x => x.id === b.id)) await DB.del('books', b.id);
   await renderLibrary();
   installBuiltin();
   Y.resume();

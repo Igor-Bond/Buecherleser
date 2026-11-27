@@ -15,12 +15,10 @@ export const BOOKS = [
     hoeren: true, minutes: HOEREN_B1.minutes, total: 20, b1: 15, a2: 9 },
   { id: 'hoeren-b1-2', title: 'Hören B1 — Prüfungsniveau', label: 'Prüfungsniveau', note: 'Формат DTZ · сложнее: тексты длиннее, ответы другими словами', variants: HOEREN_B1_2.variants,
     hoeren: true, minutes: HOEREN_B1_2.minutes, total: 20, b1: 15, a2: 9 },
-  // Sprechen — отдельное приложение (папка sprechen/): в библиотеке от него только плитка, которая его открывает
-  { id: 'sprechen-b1', title: 'Sprechen B1 — Sprechtraining', label: 'Sprechtraining', note: 'Отдельное приложение · фразы, задания, Prüfung', variants: [], app: 'sprechen/' },
 ];
 export const bookMeta = b => ({
   id: b.id, test: true, title: b.title, label: b.label,
-  author: b.app ? b.note : `${b.note} · вариантов: ${b.variants.length}`, added: Date.now(), progress: 0,
+  author: `${b.note} · вариантов: ${b.variants.length}`, added: Date.now(), progress: 0,
 });
 
 const LET = 'abcdefghi';

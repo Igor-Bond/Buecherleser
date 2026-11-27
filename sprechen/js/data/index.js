@@ -1,4 +1,4 @@
-// Приложение Sprechen B1: справочник и наборы заданий. Новый набор — файл sNN.js, добавляется сюда и в SHELL в sw.js.
+// Приложение Sprechen B1: справочник и наборы заданий. Новый набор — файл sNN.js, добавляется сюда и в SHELL в sw.js (сверяет tools/check-precache.mjs).
 import s01 from './s01.js';
 import s02 from './s02.js';
 import s03 from './s03.js';

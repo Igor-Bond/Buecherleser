@@ -1,13 +1,12 @@
-// Приложение «Sprechen B1» — тренировка устной части DTZ. Отдельная страница со своей установкой на телефон,
-// но данные общие с Bücherleser (тот же сайт, та же база): ключ ИИ, выбранные голоса, скорость речи и прогресс.
-// Разметку экранов дают js/sprechen.js и js/trainer.js, здесь — их показ, микрофон, голос и сохранение.
-import * as DB from '../js/db.js';
-import * as Sp from '../js/speak.js';
-import * as V from '../js/voicein.js';
-import * as SPR from '../js/sprechen.js';
-import * as TR from '../js/trainer.js';
-import { explain } from '../js/llm.js';
-import { TEST_LINES, nowText, speechBox } from '../js/hoeren.js';
+// Приложение «Sprechen B1» — тренировка устной части DTZ. Самостоятельное: свои модули, своя база данных, своя установка на телефон.
+// Разметку экранов дают js/views.js и js/trainer.js, здесь — их показ, микрофон, голос и сохранение.
+import * as DB from './js/db.js';
+import * as Sp from './js/speak.js';
+import * as V from './js/voicein.js';
+import * as SPR from './js/views.js';
+import * as TR from './js/trainer.js';
+import { explain } from './js/llm.js';
+import { TEST_LINES, nowText, speechBox } from './js/voice.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -31,25 +30,25 @@ function md(s) {
   return out + (ul ? '</ul>' : '');
 }
 
-// ---------- общие с Bücherleser данные. Обе страницы могут быть открыты сразу, поэтому в базу пишется только то, что изменилось здесь:
-// запись читается заново, в ней заменяются свои поля — чужие (ответы Lesen и Hören, оформление) остаются как были.
-let S = { key: '', model: '', level: 'A2', rate: 1 };
+// ---------- настройки и прогресс. Приложение может быть открыто в двух вкладках, поэтому в базу пишется только то, что изменилось здесь:
+// запись читается заново, и в ней заменяются изменённые поля.
+let S = { key: '', model: '', level: 'A2', rate: 1, theme: 'sepia' };
 const setPending = {};
 const flushSettings = debounce(async () => {
-  const cur = (await DB.get('kv', 'settings')) || {};
+  const cur = (await DB.get('settings')) || {};
   Object.assign(cur, setPending, { at: Date.now() });
   for (const k of Object.keys(setPending)) delete setPending[k];
-  await DB.put('kv', cur, 'settings');
+  await DB.put(cur, 'settings');
 }, 250);
 function saveSettings(patch = { rate: S.rate }) { Object.assign(S, patch); Object.assign(setPending, patch); flushSettings(); }
 
-let LES = {}; // прогресс: запись «lesen» целиком, свои ключи — sp00 (тренажёр фраз) и s01…s08 (наборы заданий)
+let LES = {}; // прогресс: sp00 — тренажёр фраз, s01…s08 — наборы заданий
 const dirty = new Set();
 const persist = debounce(async () => {
-  const cur = (await DB.get('kv', 'lesen')) || {};
+  const cur = (await DB.get('state')) || {};
   for (const v of dirty) cur[v] = LES[v];
   dirty.clear();
-  await DB.put('kv', cur, 'lesen');
+  await DB.put(cur, 'state');
 }, 300);
 let voicePrefs = {};
 const T = {
@@ -67,7 +66,7 @@ function voiceAct(act, root) {
   } else if (act === 'low-' || act === 'low+') {
     // тон мужских реплик хранится вместе с выбором голосов — на устройстве
     const low = +clamp((+voicePrefs.low || Sp.LOW_DEFAULT) + (act === 'low+' ? 0.04 : -0.04), 0.5, 1).toFixed(2);
-    voicePrefs = { ...voicePrefs, low }; Sp.setPrefs(voicePrefs); DB.put('kv', voicePrefs, 'voices');
+    voicePrefs = { ...voicePrefs, low }; Sp.setPrefs(voicePrefs); DB.put(voicePrefs, 'voices');
     const out = root.querySelector('.low'); if (out) out.textContent = low.toFixed(2).replace('.', ',');
     Sp.speak(TEST_LINES, { rate: S.rate || 1 });
   } else if (act === 'voice-test') {
@@ -80,7 +79,7 @@ function voicePick(e) {
   const sel = e.target.closest('select[data-voice]');
   if (!sel) return;
   voicePrefs = { ...voicePrefs, [sel.dataset.voice]: sel.value || undefined };
-  Sp.setPrefs(voicePrefs); DB.put('kv', voicePrefs, 'voices');
+  Sp.setPrefs(voicePrefs); DB.put(voicePrefs, 'voices');
 }
 
 // ---------- Экраны. Середина прокручивается, кнопки стоят в нижней полосе.
@@ -89,7 +88,7 @@ const recBlobs = new Map(); // записи ответов живут, пока 
 const sxBody = $('#sx-body'), sxBar = $('#sx-bar');
 let X = null; // { T, scr, set, part, sess, cur, ui, ex } — scr: hub | home | card | done | me | sets | task | exsel | exam | exdone | voice
 let recTick = 0, exTick = 0, spAi = null, tkAi = null, sxPlaying = false;
-const sxCtx = () => ({ st: X.T.st, day: TR.today(), md, hasKey: () => !!S.key, blob: (id, part) => recBlobs.get(id + part) || '', speechBox: () => speechBox(X.T), set: () => ({ key: S.key || '', level: S.level || 'A2' }) });
+const sxCtx = () => ({ st: X.T.st, day: TR.today(), md, hasKey: () => !!S.key, blob: (id, part) => recBlobs.get(id + part) || '', speechBox: () => speechBox(X.T), set: () => ({ key: S.key || '', level: S.level || 'A2', theme: S.theme || 'sepia' }) });
 const trEnv = () => ({ canDictate: V.canDictate, st: trSt() });
 const trSt = () => X.T.st('sp00');
 function trSave() { const st = trSt(); delete st.dr; X.T.save('sp00'); } // st.dr — счёт прежнего тренажёра, он больше не нужен
@@ -105,6 +104,7 @@ function sxDraw(keep = false) {
     home: () => ({ title: 'Phrasentrainer', ...TR.homeView(st, day, trEnv()) }), card: () => ({ title: 'Phrasentrainer', ...TR.cardView(X.cur, X.ui, X.sess, trEnv()) }),
     done: () => ({ title: 'Phrasentrainer', ...TR.doneView(X.sess, st, day) }), me: () => ({ title: 'Meine Daten', ...TR.meView(st.me) }),
   })[X.scr]();
+  if (X.scr === 'talk' && X.tk.exam && X.ex) Object.assign(v, { title: `Prüfung · ${set.title}`, pos: clock(X.ex.sec || 0) });
   const top = sxBody.scrollTop;
   $('#sx-title').textContent = v.title; sxBody.innerHTML = v.body; sxBar.innerHTML = v.bar; $('#sx-pos').textContent = v.pos;
   sxBar.hidden = !v.bar;
@@ -322,17 +322,36 @@ function exStart(setId) {
   X.ex = { i: 0, tok: 0, phase: 'ask', buf: '', heard: '', sec: 0, t0: Date.now(), txt: { t1: '', t2: '', t3: '' } };
   sxGo('exam', { set: setId });
   const ex = X.ex;
-  exTick = setInterval(() => { ex.sec = Math.round((Date.now() - ex.t0) / 1000); if (X.ex === ex && X.scr === 'exam') $('#sx-pos').textContent = clock(ex.sec); }, 1000);
+  exClock(ex);
   exAsk();
 }
 function exNext() {
   const ex = X.ex, steps = SPR.examSteps(SPR.setOf(X.set)), part = steps[ex.i][0];
   V.stopAll(); Sp.stop(); exKeep(ex);
   ex.txt[part] = `${ex.txt[part]} ${ex.buf}`.trim();
-  if (ex.i < steps.length - 1) { ex.i++; return exAsk(); }
-  // конец прогона: тексты ответов ложатся в задания набора (старый разбор к новому тексту не относится)
-  const st = X.T.st(X.set);
+  if (ex.i < steps.length - 1) {
+    ex.i++;
+    return steps[ex.i][0] === 't3' && S.key && V.canDictate ? exTalk() : exAsk();
+  }
+  exFinish();
+}
+// Третья часть прогона с партнёром-ИИ: экзаменатор объявляет задание, дальше идёт тот же разговор, что и в задании Teil 3
+function exTalk() {
+  const ex = X.ex, set = SPR.setOf(X.set), tk = { log: [], phase: 'speak', tok: 0, live: '', exam: true };
+  sxGo('talk', { tk, part: 't3' }, 'none');
+  exClock(ex);
+  const go = () => { if (tkLive(tk) && tk.tok === 0) tkListen(); };
+  if (Sp.status() === 'none' || Sp.status() === 'off') go(); else Sp.speak([['f1', SPR.examSteps(set).at(-1)[1]]], { rate: S.rate || 1 }).then(go);
+}
+function exClock(ex) {
+  clearInterval(exTick);
+  exTick = setInterval(() => { ex.sec = Math.round((Date.now() - ex.t0) / 1000); if (X.ex === ex && (X.scr === 'exam' || X.scr === 'talk')) $('#sx-pos').textContent = clock(ex.sec); }, 1000);
+}
+// Конец прогона: тексты ответов ложатся в задания набора (старый разбор к новому тексту не относится)
+function exFinish() {
+  const ex = X.ex, st = X.T.st(X.set), tk = X.scr === 'talk' ? X.tk : null;
   ex.tok++; ex.sec = Math.round((Date.now() - ex.t0) / 1000);
+  if (tk) { tk.tok++; ex.txt.t3 = SPR.userLines(tk.log); if (ex.txt.t3) st.dlg = tk.log.slice(0, 60); X.tk = null; }
   for (const p of SPR.ORDER) if (ex.txt[p]) { (st.txt ||= {})[p] = ex.txt[p]; if (st.ai) delete st.ai[p]; }
   st.exam = { at: Date.now(), sec: ex.sec }; X.T.save(X.set);
   X.ex = null;
@@ -397,7 +416,7 @@ function tkSave(tk) {
   if (st.ai) delete st.ai.t3;
   X.T.save(X.set);
 }
-const tkEnd = () => history.back(); // назад, на экран задания Teil 3; разговор сохранится по дороге
+const tkEnd = () => (X.tk?.exam ? exFinish() : history.back()); // в прогоне — к итогу; иначе назад, на экран задания Teil 3 (разговор сохранится по дороге)
 
 function sxClick(el) {
   const act = el.dataset.sx;
@@ -433,22 +452,38 @@ sxBody.addEventListener('change', e => voicePick(e));
 // ключ ИИ и уровень
 sxBody.addEventListener('input', debounce(e => {
   const el = e.target.closest?.('[data-set]');
-  if (el) saveSettings({ [el.dataset.set]: el.value.trim() });
+  if (!el) return;
+  saveSettings({ [el.dataset.set]: el.value.trim() });
+  if (el.dataset.set === 'theme') applyTheme();
 }, 400));
 
 // ---------- запуск
-function applyLook(look) {
-  if (!look?.bg || !look?.fg) return; // оформление — то же, что выбрано в Bücherleser
-  const st = document.documentElement.style, n = parseInt(look.bg.slice(1), 16);
-  st.setProperty('--bg', look.bg); st.setProperty('--fg', look.fg);
-  document.documentElement.dataset.dark = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 < 0.4 ? '1' : '0';
-  $('meta[name=theme-color]').content = look.bg;
+const COLORS = { sepia: ['#f4ecd8', '#3d3223'], light: ['#fbfaf7', '#1f1f1f'], dark: ['#1e1f22', '#cfcdc8'] };
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+function applyTheme() {
+  const id = S.theme === 'auto' ? (darkMq.matches ? 'dark' : 'sepia') : S.theme, [bg, fg] = COLORS[id] || COLORS.sepia, st = document.documentElement.style;
+  st.setProperty('--bg', bg); st.setProperty('--fg', fg);
+  document.documentElement.dataset.dark = id === 'dark' ? '1' : '0';
+  $('meta[name=theme-color]').content = bg;
+}
+darkMq.addEventListener('change', applyTheme);
+// Первый запуск: ключ ИИ, голоса и прогресс переносятся из базы приложения для чтения книг, частью которого Sprechen был раньше
+async function migrate() {
+  if (await DB.get('migrated')) return;
+  const old = await DB.importOld();
+  if (old) {
+    const o = old.settings || {}, n = parseInt((o.look?.bg || '#f4ecd8').slice(1), 16), dark = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 < 0.4;
+    if (!(await DB.get('settings'))) await DB.put({ key: o.key || '', model: o.model || '', level: o.level || 'A2', rate: o.rate || 1, theme: dark ? 'dark' : o.look?.theme === 'light' ? 'light' : 'sepia', at: Date.now() }, 'settings');
+    const state = Object.fromEntries(Object.entries(old.state || {}).filter(([k]) => /^(sp00|s\d\d)$/.test(k)));
+    if (Object.keys(state).length && !(await DB.get('state'))) await DB.put(state, 'state');
+    if (old.voices && !(await DB.get('voices'))) await DB.put(old.voices, 'voices');
+  }
+  await DB.put(Date.now(), 'migrated');
 }
 async function load() {
-  const saved = (await DB.get('kv', 'settings')) || {};
-  S = { ...S, ...saved, ...setPending };
-  applyLook(saved.look);
-  if (!dirty.size) LES = (await DB.get('kv', 'lesen')) || {};
+  S = { ...S, ...((await DB.get('settings')) || {}), ...setPending };
+  applyTheme();
+  if (!dirty.size) LES = (await DB.get('state')) || {};
 }
 addEventListener('popstate', e => {
   if (!X) return;
@@ -456,14 +491,15 @@ addEventListener('popstate', e => {
   Object.assign(X, e.state?.x || { scr: 'hub' });
   sxDraw();
 });
-// Вернулись в приложение: в Bücherleser могли поменять ключ или прийти данные с другого устройства
+// Вернулись в приложение: в другой вкладке могли поменять настройки или продвинуться в заданиях
 document.addEventListener('visibilitychange', async () => {
   if (document.hidden || !X || ['card', 'exam', 'task', 'me'].includes(X.scr)) return;
   await load(); sxDraw(true);
 });
 (async () => {
+  await migrate();
   await load();
-  voicePrefs = (await DB.get('kv', 'voices')) || {}; Sp.setPrefs(voicePrefs);
+  voicePrefs = (await DB.get('voices')) || {}; Sp.setPrefs(voicePrefs);
   X = { T, scr: 'hub' };
   history.replaceState({ v: 'sprechen', x: { scr: 'hub' } }, '');
   sxDraw();
