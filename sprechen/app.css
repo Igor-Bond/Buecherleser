@@ -178,3 +178,16 @@ a { color: var(--accent); }
 .sx-ref .rm b { font-weight: 600; }
 .sx-ref .rm span { display: block; font: 13.5px/1.4 var(--ui); color: var(--muted); }
 .sx-foot { text-align: center; margin: 22px 0 0; font-size: 14px; }
+/* разговор с партнёром-ИИ */
+.sx-talk { background: var(--soft); border-radius: 10px; padding: 12px 14px 4px; margin-top: 14px; }
+.sx-talk p { margin: 0 0 8px; }
+.sx-chat { display: flex; flex-direction: column; gap: 8px; }
+.sx-b { max-width: 86%; margin: 0; padding: 9px 12px; border-radius: 14px; font-family: var(--font); font-size: 17px; line-height: 1.38; background: var(--card); border: 1px solid var(--line); align-self: flex-start; }
+.sx-b b { display: block; font: 600 12px var(--ui); color: var(--muted); margin-bottom: 2px; }
+.sx-b.u { align-self: flex-end; background: color-mix(in srgb, var(--accent) 14%, var(--bg)); border-color: color-mix(in srgb, var(--accent) 35%, var(--bg)); }
+.sx-b.wait { color: var(--muted); font-family: var(--ui); font-size: 15px; }
+.sx-dlg { margin: 0 0 12px; }
+.sx-dlg summary { cursor: pointer; color: var(--muted); padding: 6px 0; }
+.sx-dlg .sx-b { max-width: 100%; font-size: 16px; margin-bottom: 6px; }
+#sx-bar button:disabled { opacity: .6; cursor: default; }
+#v-sprechen[data-scr=talk] #sx-bar { min-height: calc(136px + env(safe-area-inset-bottom)); }

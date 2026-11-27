@@ -1,7 +1,7 @@
 // Офлайн-режим приложения Sprechen B1: сначала сеть (обновления приходят сразу), при её отсутствии — кеш.
 // Имя кеша своё: кеши с началом «buecherleser-» стирает sw.js соседнего Bücherleser.
 const PREFIX = 'sprechen-b1-';
-const CACHE = PREFIX + 'v1';
+const CACHE = PREFIX + 'v2';
 // Список собирает и сверяет tools/check-precache.mjs: свои файлы и общие с Bücherleser модули из ../js
 const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', '../js/db.js', '../js/speak.js', '../js/voicein.js', '../js/llm.js', '../js/hoeren.js', '../js/sprechen.js', '../js/trainer.js', '../js/sprechen/index.js', '../js/sprechen/phrases.js', '../js/sprechen/s01.js', '../js/sprechen/s02.js', '../js/sprechen/s03.js', '../js/sprechen/s04.js', '../js/sprechen/s05.js', '../js/sprechen/s06.js', '../js/sprechen/s07.js', '../js/sprechen/s08.js', '../js/sprechen/scenes.js', '../assets/sprechen/arbeit.jpg', '../assets/sprechen/arzt.jpg', '../assets/sprechen/bus.jpg', '../assets/sprechen/essen.jpg', '../assets/sprechen/kasse.jpg', '../assets/sprechen/kurs.jpg', '../assets/sprechen/spielplatz.jpg', '../assets/sprechen/umzug.jpg'];
 

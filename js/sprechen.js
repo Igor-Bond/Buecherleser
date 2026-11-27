@@ -86,7 +86,7 @@ export function hubView(ctx) {
   const item = (act, title, ru, state, pct) => `<button class="tr-block" ${act}><b lang="de">${title}</b><span>${ru}</span><span class="tr-st">${state}</span>${pct == null ? '' : `<i class="prog"><i style="width:${pct}%"></i></i>`}</button>`;
   let h = '<div class="tr-blocks">';
   h += item('data-sx="go" data-scr="home"', 'Phrasentrainer', 'Готовые фразы голосом: ступени запоминания и повторение по дням.', `${P.keys.length ? `сегодня ${P.keys.length}` : 'на сегодня всё'} · пройдено ${S.known} из ${S.total}`, Math.round(100 * S.known / S.total));
-  h += item('data-sx="go" data-scr="sets"', 'Aufgaben', 'Восемь наборов по три задания: рассказ о себе, фотография, совместное планирование. Запись, самопроверка, разбор ИИ, образец.', `сделано ${done} из ${all}`, Math.round(100 * done / all));
+  h += item('data-sx="go" data-scr="sets"', 'Aufgaben', 'Восемь наборов по три задания: рассказ о себе, фотография, совместное планирование. Запись, самопроверка, разбор ИИ, образец; в Teil 3 — разговор с партнёром-ИИ.', `сделано ${done} из ${all}`, Math.round(100 * done / all));
   h += item('data-sx="go" data-scr="exsel"', 'Prüfung', 'Три части подряд, как на экзамене: вопросы задаёт голос, идёт время, ответы превращаются в текст.', exams ? `пройдено наборов: ${exams} из ${SETS.length}` : 'ещё не проходили');
   h += item('data-sx="go" data-scr="ref"', 'Redemittel und Ablauf', 'Как проходит экзамен и готовые фразы для каждой части.', 'справочник');
   h += item('data-sx="go" data-scr="voice"', 'Einstellungen', 'Голос и скорость речи, проверка звука, ключ ИИ для разбора ответов.', ctx.hasKey() ? 'ключ ИИ задан' : 'ключ ИИ не задан');
@@ -109,12 +109,14 @@ export function setsView(ctx) {
 export function taskView(set, part, ctx) {
   const P = PARTS[part], st = ctx.st(set.id), url = ctx.blob(set.id, part), i = ORDER.indexOf(part);
   let h = `<p class="sx-instr" lang="de">${P.instr}<span lang="ru">${P.ru}</span></p>${taskHtml(set, part)}<div class="sp" data-set="${set.id}" data-part="${part}">`;
+  if (part === 't3') h += `<div class="sx-talk"><p><button class="primary" data-sx="talk">Разговор с партнёром-ИИ</button></p><p class="muted">Партнёр отвечает голосом, спорит и предлагает своё — как второй кандидат на экзамене. ${ctx.hasKey() ? 'Нужен интернет.' : 'Нужен ключ ИИ — он задаётся в настройках.'} Без партнёра говорите свою половину разговора и записывайте её ниже.</p></div>`;
   h += `<h2>1 · Запись</h2><p class="muted">Скажите ответ вслух. Ориентир — ${P.time}.${V.canRecord ? ' Потом послушайте себя.' : ' Запись в этом браузере недоступна — засеките время.'}</p>`;
   if (V.canRecord) h += `<p class="sp-audio${url ? ' has' : ''}"><audio controls${url ? ` src="${url}"` : ''}></audio></p>`;
   h += `<h2>2 · Самопроверка <span class="sp-n">${countText(st, part)}</span></h2><div class="chks">`;
   h += P.checks.map((c, k) => `<button class="chk${st.chk?.[`${part}.${k}`] ? ' on' : ''}" data-chk="${part}.${k}"><i>✓</i><span>${c}</span></button>`).join('') + '</div>';
   h += `<h2>3 · Текст ответа и разбор</h2><textarea class="sp-text" rows="5" lang="de" spellcheck="false" placeholder="Ihre Antwort auf Deutsch — продиктуйте или напечатайте">${esc(st.txt?.[part] || '')}</textarea>`;
   h += `<p class="muted">${V.canDictate ? 'Распознаванию нужен интернет; звук при этом обрабатывает сервис браузера. ' : 'Распознавание речи в этом браузере недоступно — текст можно напечатать. '}${ctx.hasKey() ? 'ИИ видит только текст: произношение и интонацию он не оценивает.' : 'Для разбора нужен ключ ИИ — он задаётся в настройках приложения.'}</p>`;
+  if (part === 't3' && st.dlg?.length) h += `<details class="sx-dlg"><summary>Разговор с партнёром целиком</summary>${chatHtml(set, st.dlg)}</details>`;
   h += `<div class="sp-ai ai">${st.ai?.[part] ? ctx.md(st.ai[part]) : ''}</div>`;
   h += `<h2>4 · Образец</h2><div class="sp-sample">${st.show?.[part] ? sampleHtml(set, part) : '<p class="muted">Сначала ответьте сами, потом сравните.</p><p><button data-sp="sample">Показать образец</button></p>'}</div></div>`;
   const go = k => `<button data-sx="task" data-set="${set.id}" data-part="${ORDER[k]}">${k < i ? '← ' : ''}${PARTS[ORDER[k]].short}${k > i ? ' →' : ''}</button>`;
@@ -122,6 +124,49 @@ export function taskView(set, part, ctx) {
   const rec = V.canRecord ? '<button data-sp="rec" class="primary wide">● Записать ответ</button>' : '';
   const bar = rec + (V.canDictate ? `<button data-sp="dict"${rec ? '' : ' class="primary wide"'}>● Продиктовать</button>` : '') + '<button data-sp="ai">Разбор ИИ</button>';
   return { title: `${set.title} · ${P.short}`, body: h, bar, pos: '' };
+}
+
+// ---------- Teil 3 с партнёром-ИИ: вы говорите, распознанная реплика уходит модели, её ответ читает голос
+// В образце набора два говорящих: первый — «вы», второй — партнёр; его имя и голос берутся оттуда.
+export function partnerOf(set) {
+  const codes = [...new Set(set.t3.sample.map(l => l[0]))];
+  return { code: codes[1], name: set.t3.who[codes[1]], me: set.t3.who[codes[0]] };
+}
+export const userLines = log => log.filter(l => l.who === 'u').map(l => l.t).join(' ');
+const chatHtml = (set, log) => { const P = partnerOf(set); return log.map(l => `<p class="sx-b ${l.who}" lang="de"><b>${l.who === 'u' ? 'Вы' : P.name}</b>${esc(l.t)}</p>`).join(''); };
+export const PARTNER_SYSTEM = set => { const P = partnerOf(set); return `Du bist ${P.name}, ein Prüfungsteilnehmer in der mündlichen Prüfung DTZ (Deutsch-Test für Zuwanderer), Teil 3 «Gemeinsam etwas planen». Du planst zusammen mit deinem Gesprächspartner, einem Deutschlernenden auf Niveau A2–B1.
+Die Aufgabe: ${set.t3.task}
+Die Punkte auf dem Aufgabenblatt: ${set.t3.points.join(' ')}
+
+Regeln für deine Antworten:
+- Sprich einfaches, natürliches Deutsch auf Niveau A2–B1 und duze den Partner.
+- Antworte kurz: höchstens zwei Sätze, zusammen höchstens 30 Wörter.
+- Reagiere zuerst auf das, was der Partner gerade gesagt hat: stimme zu oder widersprich höflich mit einem kurzen Grund. Sei nicht mit allem einverstanden: Bei etwa jedem dritten Vorschlag hast du ein Problem oder eine andere Idee.
+- Danach mach einen eigenen Vorschlag oder stell eine Frage zu einem Punkt, der noch offen ist. Löse nicht alle Punkte allein, lass dem Partner Raum.
+- Korrigiere keine Fehler des Partners und erkläre nichts. Du bist kein Lehrer.
+- Der Text des Partners kommt aus einer Spracherkennung: Satzzeichen fehlen, einzelne Wörter können falsch erkannt sein. Wenn du etwas wirklich nicht verstehst, frag kurz nach.
+- Wenn alle Punkte besprochen sind, fasse nicht selbst zusammen, sondern bitte den Partner: «Dann haben wir alles. Fasst du noch einmal zusammen?»
+- Wenn der Partner zusammengefasst oder sich verabschiedet hat, antworte mit einem kurzen Schlusssatz und schreib danach genau [ENDE].
+- Gib nur deinen gesprochenen Text aus: keine Namen davor, keine Anführungszeichen, keine Formatierung, keine Erklärungen.`; };
+export function partnerPrompt(set, log) {
+  const P = partnerOf(set);
+  if (!log.length) return 'Das Gespräch beginnt. Fang du an: Begrüße den Partner kurz und mach einen ersten Vorschlag zum ersten Punkt.';
+  return `Das Gespräch bis jetzt:\n${log.map(l => `${l.who === 'u' ? 'Partner' : P.name + ' (du)'}: ${l.t}`).join('\n')}\n\nAntworte jetzt als ${P.name}.`;
+}
+// tk: { log: [{ who: 'u' | 'p', t }], phase: 'idle' | 'listen' | 'think' | 'speak', live, err }
+export function talkView(set, tk) {
+  const t = set.t3, P = partnerOf(set), turns = tk.log.filter(l => l.who === 'u').length;
+  let h = `<div class="sx-board" lang="de"><h3>${t.title}</h3><p>${t.task}</p><p>${t.points.map(p => `– ${p}`).join('<br>')}</p></div><div class="sx-chat">${chatHtml(set, tk.log)}`;
+  if (tk.phase === 'listen') h += `<p class="sx-b u live" lang="de"><b>Вы</b><span class="tr-live">${esc(tk.live || '…')}</span></p>`;
+  if (tk.phase === 'think') h += `<p class="sx-b p wait"><b>${P.name}</b>думает…</p>`;
+  h += `</div><p class="tr-hint">${{ idle: tk.log.length ? (tk.err ? 'Партнёр не ответил. Попробуйте ещё раз.' : 'Нажмите «Говорить» и продолжайте разговор.') : `Ваш партнёр — ${P.name}. Начните разговор сами или пусть начнёт он. Пройдите по всем пунктам и в конце подведите итог.`,
+    listen: 'Говорите. Закончили реплику — нажмите «Готово» или помолчите три секунды.', think: '', speak: 'Слушайте партнёра…' }[tk.phase]}</p>`;
+  let bar;
+  if (tk.phase === 'listen') bar = '<button data-sx="tkstop" class="primary wide on">■ Готово</button>';
+  else if (tk.phase === 'idle') bar = (tk.err ? '<button data-sx="tkretry" class="primary wide">Ответ партнёра ещё раз</button>' : '<button data-sx="tksay" class="primary wide">● Говорить</button>')
+    + (tk.log.length ? '' : '<button data-sx="tkfirst">Пусть начнёт партнёр</button>') + (turns ? '<button data-sx="tkend">Закончить разговор</button>' : '');
+  else bar = `<button class="primary wide" disabled>${tk.phase === 'think' ? 'Партнёр думает…' : 'Партнёр говорит…'}</button>${turns ? '<button data-sx="tkend">Закончить разговор</button>' : ''}`;
+  return { title: `${set.title} · Teil 3`, body: h, bar, pos: turns ? `реплик: ${turns}` : '' };
 }
 
 // ---------- Prüfung: три части подряд. Вопросы задаёт голос, ответ слушает распознавание; в конце тексты ответов ложатся в задания набора.
@@ -173,7 +218,22 @@ export function voiceView(ctx) {
 export const AI_SYSTEM = level => `Ты — экзаменатор и преподаватель немецкого языка. Ты готовишь русскоязычного ученика (сейчас уровень ${level}) к устной части экзамена DTZ (Deutsch-Test für Zuwanderer, A2–B1). \
 Ученик прислал свой устный ответ, превращённый в текст распознаванием речи: знаки препинания, заглавные буквы и орфографию не оценивай, а явные ошибки распознавания (слово не к месту, похожее по звучанию) не считай ошибками ученика. \
 Отвечай по-русски, коротко и по делу, без вступлений и прощаний. Немецкие слова и примеры выделяй **жирным**. Используй короткие абзацы и маркированные списки, без таблиц.`;
-export function aiPrompt(set, part, text) {
+export function aiPrompt(set, part, text, dlg) {
+  if (part === 't3' && dlg?.length && userLines(dlg) === text) {
+    const P = partnerOf(set);
+    return `Задание экзамена: ${taskText(set, part)}
+Это диалог двух кандидатов. Ученик разговаривал с партнёром по имени ${P.name}, чьи реплики писал ИИ. Оценивай только реплики ученика: умеет ли он предлагать, реагировать на слова партнёра, спрашивать мнение, возражать с причиной и подводить итог; все ли пункты задания обсудили.
+
+Разговор (реплики ученика — распознанная речь):
+${dlg.map(l => `${l.who === 'u' ? 'Ученик' : P.name}: ${l.t}`).join('\n')}
+
+Разбери в таком порядке:
+- **Задание:** одним-двумя предложениями: какие пункты обсудили, какие пропустили, договорились ли в конце.
+- **Разговор:** одним-двумя предложениями: реагировал ли ученик на реплики партнёра или говорил заготовками.
+- **Ошибки:** до пяти самых важных в репликах ученика; для каждой одна строка: как сказано → как правильно, и объяснение в пять-десять слов.
+- **Уровень:** одним предложением — ближе к A2 или к B1 и почему.
+- **Что добавить до B1:** две-три готовые немецкие фразы, которые пригодились бы именно в этом разговоре.`;
+  }
   const extra = part === 't3' ? '\nЭто задание на экзамене — диалог двух кандидатов. Ученик тренируется один и говорит только свою половину: предложения по пунктам и вопросы партнёру. Оцени, умеет ли он предлагать, спрашивать мнение, аргументировать и подводить итог; отсутствие реплик партнёра ошибкой не считай.' : '';
   return `Задание экзамена: ${taskText(set, part)}${extra}
 

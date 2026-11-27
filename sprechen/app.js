@@ -88,7 +88,7 @@ function voicePick(e) {
 const recBlobs = new Map(); // записи ответов живут, пока открыта страница приложения
 const sxBody = $('#sx-body'), sxBar = $('#sx-bar');
 let X = null; // { T, scr, set, part, sess, cur, ui, ex } — scr: hub | home | card | done | me | sets | task | exsel | exam | exdone | voice
-let recTick = 0, exTick = 0, spAi = null, sxPlaying = false;
+let recTick = 0, exTick = 0, spAi = null, tkAi = null, sxPlaying = false;
 const sxCtx = () => ({ st: X.T.st, day: TR.today(), md, hasKey: () => !!S.key, blob: (id, part) => recBlobs.get(id + part) || '', speechBox: () => speechBox(X.T), set: () => ({ key: S.key || '', level: S.level || 'A2' }) });
 const trEnv = () => ({ canDictate: V.canDictate, st: trSt() });
 const trSt = () => X.T.st('sp00');
@@ -97,10 +97,11 @@ function sxDraw(keep = false) {
   const st = trSt(), day = TR.today(), c = sxCtx(), set = X.set && SPR.setOf(X.set);
   if (X.scr === 'card') { X.cur = X.sess ? TR.current(X.sess, st, st.me) : null; if (!X.cur) X.scr = X.sess ? 'done' : 'home'; }
   if (X.scr === 'done' && !X.sess) X.scr = 'home';
+  if (X.scr === 'talk' && !X.tk) X.scr = 'task';
   if ((X.scr === 'task' || X.scr === 'exam' || X.scr === 'exdone') && !set || X.scr === 'exam' && !X.ex) X.scr = 'hub';
   const v = ({
     hub: () => SPR.hubView(c), ref: () => SPR.refView(), sets: () => SPR.setsView(c), task: () => SPR.taskView(set, X.part, c), voice: () => SPR.voiceView(c),
-    exsel: () => SPR.exselView(c), exam: () => SPR.examView(set, X.ex), exdone: () => SPR.exdoneView(set, c),
+    talk: () => SPR.talkView(set, X.tk), exsel: () => SPR.exselView(c), exam: () => SPR.examView(set, X.ex), exdone: () => SPR.exdoneView(set, c),
     home: () => ({ title: 'Phrasentrainer', ...TR.homeView(st, day, trEnv()) }), card: () => ({ title: 'Phrasentrainer', ...TR.cardView(X.cur, X.ui, X.sess, trEnv()) }),
     done: () => ({ title: 'Phrasentrainer', ...TR.doneView(X.sess, st, day) }), me: () => ({ title: 'Meine Daten', ...TR.meView(st.me) }),
   })[X.scr]();
@@ -115,13 +116,14 @@ function sxDraw(keep = false) {
 function sxLeave() {
   V.stopAll(); Sp.stop(); sxPlaying = false;
   clearInterval(recTick); clearInterval(exTick);
+  if (X?.tk) { X.tk.tok++; tkAi?.abort(); if (X.scr === 'talk') { tkSave(X.tk); X.tk = null; } }
 }
 // mode: push — новый экран в истории, replace — вместо текущего, none — тот же экран (следующая карточка)
 function sxGo(scr, p = {}, mode = 'push') {
   sxLeave();
   Object.assign(X, p, { scr });
   // карточку и прогон из истории не восстановить: «вперёд» вернёт на их список
-  const state = { v: 'sprechen', x: { scr: scr === 'card' || scr === 'done' ? 'home' : scr === 'exam' ? 'exsel' : scr, set: X.set, part: X.part } };
+  const state = { v: 'sprechen', x: { scr: scr === 'card' || scr === 'done' ? 'home' : scr === 'exam' ? 'exsel' : scr === 'talk' ? 'task' : scr, set: X.set, part: X.part } };
   if (mode === 'push') history.pushState(state, ''); else if (mode === 'replace') history.replaceState(state, '');
   sxDraw();
   if (scr === 'voice' && Sp.status() !== 'ok') Sp.ready().then(() => { if (X.scr === 'voice') sxDraw(true); });
@@ -277,7 +279,7 @@ async function spAnalyse(vid, part, box) {
   sxShow(out);
   try {
     const res = await explain({
-      key: S.key, model: S.model, sys: SPR.AI_SYSTEM(S.level), user: SPR.aiPrompt(SPR.setOf(vid), part, text), signal: ctl.signal, fast: true,
+      key: S.key, model: S.model, sys: SPR.AI_SYSTEM(S.level), user: SPR.aiPrompt(SPR.setOf(vid), part, text, st.dlg), signal: ctl.signal, fast: true,
       onText: d => { acc += d; if (out.isConnected) out.innerHTML = md(acc); },
     });
     (st.ai ||= {})[part] = res; (st.txt ||= {})[part] = text; T.save(vid);
@@ -337,8 +339,73 @@ function exNext() {
   sxGo('exdone', {}, 'replace');
 }
 
+// --- Teil 3 с партнёром-ИИ: слушаем реплику → модель отвечает за партнёра → голос читает ответ → снова слушаем
+const tkLive = tk => X.tk === tk && X.scr === 'talk';
+function tkDraw() { sxDraw(true); sxBody.scrollTop = sxBody.scrollHeight; }
+function tkStart() {
+  if (!S.key) return toast('Партнёру нужен ключ ИИ: Einstellungen → «Разбор ответов ИИ»', 6000);
+  sxGo('talk', { tk: { log: [], phase: 'idle', tok: 0, live: '' }, part: 't3' });
+}
+function tkListen() {
+  const tk = X.tk, tok = ++tk.tok;
+  let heard = '';
+  Sp.stop();
+  Object.assign(tk, { phase: 'listen', live: '', err: false });
+  tkDraw();
+  V.dictate({
+    wait: 15000, silence: 3000,
+    onText: t => { heard = t; const out = sxBody.querySelector('.tr-live'); if (out) { out.textContent = t || '…'; sxBody.scrollTop = sxBody.scrollHeight; } },
+    onEnd: err => {
+      if (!tkLive(tk) || tk.tok !== tok) return;
+      if (err) toast(err.message, 7000);
+      if (!heard.trim()) { tk.phase = 'idle'; return tkDraw(); } // тишина: разговор ждёт, пока вы не нажмёте «Говорить»
+      tk.log.push({ who: 'u', t: heard.trim() });
+      tkReply();
+    },
+  });
+}
+async function tkReply() {
+  const tk = X.tk, tok = ++tk.tok, set = SPR.setOf(X.set);
+  V.stopAll(); tkAi?.abort();
+  const ctl = tkAi = new AbortController();
+  Object.assign(tk, { phase: 'think', err: false });
+  tkDraw();
+  let text;
+  try {
+    text = await explain({ key: S.key, model: S.model, sys: SPR.PARTNER_SYSTEM(set), user: SPR.partnerPrompt(set, tk.log), fast: true, onText: () => {}, signal: ctl.signal });
+  } catch (err) {
+    if (!tkLive(tk) || tk.tok !== tok) return;
+    toast(err.message, 7000);
+    Object.assign(tk, { phase: 'idle', err: true });
+    return tkDraw();
+  }
+  if (!tkLive(tk) || tk.tok !== tok) return;
+  const end = /\[ENDE\]/i.test(text);
+  text = text.replace(/\[ENDE\]/gi, '').replace(/[*_#`«»"]/g, '').replace(/\s+/g, ' ').trim();
+  if (text) tk.log.push({ who: 'p', t: text });
+  tk.phase = 'speak';
+  tkDraw();
+  const next = () => { if (!tkLive(tk) || tk.tok !== tok) return; if (end) tkEnd(); else if (V.canDictate) tkListen(); else { tk.phase = 'idle'; tkDraw(); } };
+  if (!text || Sp.status() === 'none' || Sp.status() === 'off') next();
+  else Sp.speak([[SPR.partnerOf(set).code, text]], { rate: S.rate || 1 }).then(next);
+}
+// Конец разговора: ваши реплики становятся текстом ответа Teil 3, весь разговор сохраняется для разбора
+function tkSave(tk) {
+  if (!tk.log.some(l => l.who === 'u')) return;
+  const st = X.T.st(X.set);
+  (st.txt ||= {}).t3 = SPR.userLines(tk.log); st.dlg = tk.log.slice(0, 60);
+  if (st.ai) delete st.ai.t3;
+  X.T.save(X.set);
+}
+const tkEnd = () => history.back(); // назад, на экран задания Teil 3; разговор сохранится по дороге
+
 function sxClick(el) {
   const act = el.dataset.sx;
+  if (act === 'talk') return tkStart();
+  if (act === 'tksay') return tkListen();
+  if (act === 'tkstop') return V.stopAll();
+  if (act === 'tkfirst' || act === 'tkretry') return tkReply();
+  if (act === 'tkend') return tkEnd();
   if (act === 'go') sxGo(el.dataset.scr);
   else if (act === 'hub') history.back();
   else if (act === 'task') sxGo('task', { set: el.dataset.set, part: el.dataset.part }, X.scr === 'task' ? 'replace' : 'push');
