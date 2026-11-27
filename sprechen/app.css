@@ -163,7 +163,7 @@ a { color: var(--accent); }
 .sx-voice .tbox p { margin: 0 0 12px; line-height: 1.5; }
 .sx-voice button { background: var(--card); margin: 0 6px 6px 0; min-height: 40px; }
 .sx-voice .warn { color: #cf3f4f; font-weight: 600; }
-.sx-voice .rate { display: inline-block; min-width: 3.2em; text-align: center; font-weight: 600; }
+.sx-voice .rate, .sx-voice .low { display: inline-block; min-width: 3.2em; text-align: center; font-weight: 600; }
 .sx-voice .vsel { display: flex; flex-direction: column; gap: 10px; }
 .sx-voice .vsel label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 13.5px; }
 .sx-voice select { color: var(--fg); font-size: 16px; padding: 10px; }

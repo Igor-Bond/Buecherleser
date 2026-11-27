@@ -51,6 +51,8 @@ export function speechBox(ctx) {
   if (list.length) {
     const p = ctx.voices(), mark = { f: ' (жен.)', m: ' (муж.)', '': '' };
     const sel = sex => `<select data-voice="${sex}"><option value="">авто</option>${list.map(v => `<option value="${v.id.replace(/"/g, '&quot;')}"${p[sex] === v.id ? ' selected' : ''}>${v.name}${mark[v.sex]}</option>`).join('')}</select>`;
+    const lo = +p.low || Sp.LOW_DEFAULT;
+    h += `<p>Тон мужских реплик: <button data-t="low-" aria-label="Ниже">−</button><output class="low">${lo.toFixed(2).replace('.', ',')}</output><button data-t="low+" aria-label="Выше">+</button> <span class="muted">ниже — заметнее разница с женским голосом, но звук глуше; 1,00 — без изменения</span></p>`;
     h += `<p class="vsel"><label>Женский голос ${sel('f')}</label><label>Мужской голос ${sel('m')}</label></p>`;
     h += list.length > 1 ? '<p class="muted">Если в разговоре мужчина и женщина звучат одинаково — выберите голоса сами и нажмите «Проверить голоса»: сначала говорит женщина, потом мужчина.</p>'
       : '<p class="muted">Немецкий голос на устройстве один, поэтому мужские реплики читаются им же, но низким тоном. ' + (/Android/i.test(globalThis.navigator?.userAgent || '') ? 'Отдельный мужской голос: настройки телефона → Синтез речи → шестерёнка у синтезатора Google → «Установить голосовые данные» → Deutsch — там несколько голосов; после установки закройте и откройте приложение.' : 'Отдельный мужской голос можно добавить в настройках речи устройства.') + '</p>';

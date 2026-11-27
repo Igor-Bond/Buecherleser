@@ -64,6 +64,12 @@ function voiceAct(act, root) {
   if (act === 'rate-' || act === 'rate+') {
     saveSettings({ rate: +clamp((S.rate || 1) + (act === 'rate+' ? 0.1 : -0.1), 0.6, 1.3).toFixed(1) });
     const out = root.querySelector('.rate'); if (out) out.textContent = S.rate.toFixed(1).replace('.', ',') + '×';
+  } else if (act === 'low-' || act === 'low+') {
+    // тон мужских реплик хранится вместе с выбором голосов — на устройстве
+    const low = +clamp((+voicePrefs.low || Sp.LOW_DEFAULT) + (act === 'low+' ? 0.04 : -0.04), 0.5, 1).toFixed(2);
+    voicePrefs = { ...voicePrefs, low }; Sp.setPrefs(voicePrefs); DB.put('kv', voicePrefs, 'voices');
+    const out = root.querySelector('.low'); if (out) out.textContent = low.toFixed(2).replace('.', ',');
+    Sp.speak(TEST_LINES, { rate: S.rate || 1 });
   } else if (act === 'voice-test') {
     if (Sp.status() === 'none' || Sp.status() === 'off') toast('Немецкого голоса на устройстве нет — как его установить, написано выше', 6000);
     else Sp.speak(TEST_LINES, { rate: S.rate || 1 }).then(ok => { if (!ok && Sp.wasSilent()) toast('Голос не начал говорить: проверьте звук и установлен ли немецкий голос', 7000); });
