@@ -36,7 +36,8 @@ export function voiceList() {
     return { id: idOf(v) + (dup ? '#' + n : ''), name: v.name.replace(/^Microsoft | - German.*$/g, '') + (dup ? ' ' + n : ''), sex: sexOf(v), voice: v };
   });
 }
-const LOW = 0.6; // тон мужской реплики, когда читать её приходится женским или неизвестным голосом
+const LOW = 0.82; // сильнее опускать нельзя: голос Android на тоне 0.6 звучит глухо и неразборчиво
+// тон мужской реплики, когда читать её приходится женским или неизвестным голосом
 
 // Каждому говорящему — свой голос, пока голосов хватает: сначала назначенный вручную, потом подходящий по полу, потом любой свободный.
 // Когда голоса кончились, берётся уже занятый, а различие даёт высота тона.
@@ -56,10 +57,10 @@ function cast(codes) {
     if (i < 0) i = free.findIndex(v => !sexOf(v) && v !== pick.f && v !== pick.m);
     if (i >= 0) {
       const v = free.splice(i, 1)[0], known = sexOf(v) === sex;
-      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? LOW : 1.1 };
+      roles[c] = { voice: v, pitch: known ? 1 : sex === 'm' ? LOW : 1 };
     } else {
       const first = roles[codes.find(x => x[0] === c[0] && roles[x])];
-      roles[c] = { voice: first?.voice || free.shift() || all[0] || null, pitch: clampPitch(sex === 'm' ? (nth ? 0.85 : LOW) : 1.15 + 0.25 * nth) };
+      roles[c] = { voice: first?.voice || free.shift() || all[0] || null, pitch: clampPitch(sex === 'm' ? LOW - 0.1 * nth : 1.12 + 0.12 * nth) };
     }
   }
   return roles;
@@ -86,7 +87,10 @@ export function stop() {
 export function speak(lines, { rate = 1, onLine } = {}) {
   stop(); silent = false;
   if (!supported || status() === 'none') return Promise.resolve(false);
-  const my = ++run, roles = cast([...new Set(lines.map(l => l[0]))]);
+  const codes = [...new Set(lines.map(l => l[0]))];
+  const my = ++run, roles = cast(codes);
+  // тон меняется только затем, чтобы различать собеседников; один говорящий читается естественным голосом
+  if (codes.length === 1 && roles[codes[0]]) roles[codes[0]].pitch = 1;
   const queue = lines.flatMap(([c, t]) => sentences(t).map(s => [c, s]));
   return new Promise(resolve => {
     let i = 0, settled = false, started = false;
