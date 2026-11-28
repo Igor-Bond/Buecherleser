@@ -43,4 +43,4 @@ node serve.mjs
 
 Встроенный словарь собран из [de.wiktionary.org](https://de.wiktionary.org) и [ru.wiktionary.org](https://ru.wiktionary.org) по выгрузкам [kaikki.org](https://kaikki.org) и распространяется на условиях [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Тексты заданий Lesen B1 и Hören B1 написаны специально для этого проекта и не взяты из экзаменационных материалов.
 
-В папке `sprechen/` лежит отдельное приложение **Sprechen B1** для устной части экзамена: свой код, своя база данных, свой значок и установка. С читалкой оно не связано; описание — в `sprechen/README.md`.
+Приложение **Sprechen B1** для устной части экзамена живёт в собственном репозитории: https://github.com/Igor-Bond/Sprechen (адрес — https://igor-bond.github.io/Sprechen/). В папке `sprechen/` остались только страница перехода на новый адрес и файл, который снимает прежний офлайн-кеш.

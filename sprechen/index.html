@@ -2,26 +2,24 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4ecd8">
-<title>Sprechen B1 — устная часть DTZ</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="stylesheet" href="app.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprechen B1 переехал</title>
+<meta http-equiv="refresh" content="2; url=../../Sprechen/">
+<style>body{font:17px/1.5 system-ui,sans-serif;margin:0;padding:15vh 24px;text-align:center;background:#f4ecd8;color:#3a2f24}a{color:#6b3a5b}</style>
 </head>
 <body>
-
-<!-- Один экран: середина прокручивается, кнопки всегда внизу. Что в нём показано, решает app.js -->
-<main id="v-sprechen" class="view">
-  <header class="top"><button id="sx-back" aria-label="Назад" hidden>‹</button><h1 id="sx-title" lang="de">Sprechen B1</h1><span id="sx-pos"></span></header>
-  <div id="sx-body" class="page"></div>
-  <footer id="sx-bar" hidden></footer>
-</main>
-<div id="toast" hidden></div>
-
-<script type="module" src="app.js"></script>
+<p>Приложение Sprechen B1 переехало на собственный адрес.</p>
+<p><a href="../../Sprechen/">Открыть Sprechen B1</a></p>
+<p>Если оно было установлено на телефон, удалите старый значок и установите приложение заново с нового адреса. Прогресс и настройки сохранятся.</p>
+<script>
+// Обработчик офлайн-кеша старого адреса больше не нужен: снимаем его и уходим на новый адрес.
+// Сам кеш не трогаем: он общий для сайта, и новым адресом пользуется тоже — лишнее из него уберёт новое приложение.
+(async () => {
+  try {
+    for (const r of await navigator.serviceWorker?.getRegistrations() || []) if (r.scope.endsWith('/Buecherleser/sprechen/')) await r.unregister();
+  } catch {}
+  location.replace('../../Sprechen/');
+})();
+</script>
 </body>
 </html>

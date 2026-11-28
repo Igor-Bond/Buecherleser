@@ -1,5 +1,5 @@
 // Сверяет список SHELL в sw.js с файлами проекта: всё, что нужно приложению, должно попадать в офлайн-кеш.
-// Папка sprechen/ — отдельное приложение со своим кешем и своей проверкой (sprechen/tools/check-precache.mjs).
+// Папка sprechen/ в кеш не входит: в ней только переход на новый адрес приложения Sprechen B1.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
